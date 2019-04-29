@@ -1,0 +1,10 @@
+threads: 4
+mash:
+   k: 21
+   sketch_size: 1e3
+   max_dist: 1
+fastani:
+  k: 16
+  fragLen: 3000
+  minFrag: 50
+genome_folder: 'all_bins'
