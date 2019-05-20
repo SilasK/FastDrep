@@ -1,10 +1,13 @@
 threads: 4
 mash:
    k: 21
-   sketch_size: 1e3
-   max_dist: 1
+   sketch_size: 1e4 # 1e3
+   max_dist: 0.2
+   cluster_dist: 0.1
 fastani:
   k: 16
   fragLen: 3000
   minFrag: 50
 genome_folder: 'all_bins'
+genome_qualities: 'Checkm_quality_allbins.tsv'
+filter_criteria: 'completeness>=0.5&contamination<=10'
