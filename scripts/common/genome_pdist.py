@@ -60,14 +60,14 @@ def load_mash(dist_file,simplify_indexes=True):
 
 
 
-def to_graph(F,attributes=None):
+def to_graph(F,attributes=None,**kws):
 
     df= F.copy()
 
     df['Genome1']= df.index.get_level_values(0)
     df['Genome2']= df.index.get_level_values(1)
 
-    G= nx.from_pandas_edgelist(df,'Genome1','Genome2',attributes)
+    G= nx.from_pandas_edgelist(df,'Genome1','Genome2',attributes,**kws)
 
     return G
 
@@ -121,10 +121,10 @@ def extarnilize_index(indexes,genomefolder,extension='.fasta'):
 
 
 import scipy.spatial as sp, scipy.cluster.hierarchy as hc
-def clustermap(Identity):
+def clustermap(Identity,linkage_method='average'):
 
     D= Identity.unstack()
-    linkage = hc.linkage(1-D.fillna(1), method='single')
+    linkage = hc.linkage(sp.distance.squareform(1-D.fillna(1)), method=linkage_method)
 
     cg= sns.clustermap(D.fillna(0), row_linkage=linkage, col_linkage=linkage)
     return cg
