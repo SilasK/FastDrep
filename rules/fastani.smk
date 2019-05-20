@@ -1,12 +1,12 @@
 import os
 
 
-localrules: gen_genome_list,combine_fastANI
-rule gen_genome_lists:
+localrules: gen_genome_lists,combine_fastANI
+checkpoint gen_genome_lists:
     input:
         filter_genome_folder
-    ourput:
-        directory("clusters/fastani")
+    output:
+        clusters=directory("clusters/fastani")
     params:
         cluster_size=config['fastani']['subset_size']
     run:
@@ -17,13 +17,13 @@ rule gen_genome_lists:
 
         c, file=0, None
         for i,g in enumerate(genomes):
-            if i % params.cluster_size = 0
+            if (i % params.cluster_size) == 0:
                 c+=1
 
                 if file is not None: file.close()
-                file = open(os.path.join(output[0],f"Cluster{c}.txt"),'w')
+                file = open(os.path.join(output.clusters,f"Cluster{c}.txt"),'w')
 
-            f.write(f"{g}\n")
+            file.write(f"{g}\n")
 
 
         file.close()
@@ -32,7 +32,7 @@ rule gen_genome_lists:
 rule fastANI:
     input:
         list1= "clusters/fastani/Cluster{i}.txt",
-        list2= "clusters/fastani/Cluster{j}.txt"
+        list2= "clusters/fastani/Cluster{j}.txt",
         genomes= filter_genome_folder,
         all_Genomes= genome_folder
     output:
@@ -59,7 +59,7 @@ rule fastANI:
 
 
 def get_allFastANI(wildcards):
-    ALL_I=  glob_wildcards(os.path.join(checkpoints.mash_cluster.get(**wildcards).output.clusters,
+    ALL_I=  glob_wildcards(os.path.join(checkpoints.gen_genome_lists.get(**wildcards).output.clusters,
                                         "Cluster{i}.txt")).i
 
     return expand("clusters/fastani/ANIcluster{i}-{j}.txt", i=ALL_I,j=ALL_I )

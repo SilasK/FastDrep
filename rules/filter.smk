@@ -5,6 +5,7 @@ if config.get('skip_filter',False):
 else:
     filter_genome_folder='filtered_bins'
 
+    localrules: filter_genomes
     rule filter_genomes:
         input:
             dir=os.path.abspath(genome_folder),
