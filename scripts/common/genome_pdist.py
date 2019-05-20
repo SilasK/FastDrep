@@ -128,5 +128,5 @@ def clustermap(Identity):
     D= Identity.unstack()
     linkage = hc.linkage(1-D.fillna(1), method='single')
 
-    cg= sns.clustermap(D.fillna(0), row_linkage=linkage, col_linkage=linkage)
+    cg= sns.clustermap(sp.squareform(D.fillna(0)), row_linkage=linkage, col_linkage=linkage)
     return cg
