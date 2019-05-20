@@ -1,8 +1,84 @@
 DBDIR = os.path.realpath(config["database_dir"])
 CHECKMDIR = os.path.join(DBDIR, "checkm")
 CHECKM_ARCHIVE = "checkm_data_v1.0.9.tar.gz"
-
+CONDAENV='envs'
 CHECKM_init_flag= os.path.join(CHECKM_ARCHIVE,'init.txt')
+
+import os
+from glob import glob
+
+
+
+genome_folder=config['genome_folder']
+genome_fasta= glob(os.path.join(genome_folder,"*"))
+genomes = [os.path.splitext(g)[0] for g in genome_fasta]
+
+genome_fasta= dict(zip(genomes, genome_fasta))
+def get_genome_fasta(wildcards):
+    return genome_fasta[wildcards.genome]
+
+rule all:
+    input:
+        expand("{genome}/checkm/{file}",genome=genomes,
+               file=['taxonomy.tsv',"completeness.tsv","storage/tree/concatenated.fasta"])
+
+rule init_checkm:
+    input:
+        get_genome_fasta
+    output:
+        "{genome}/{genome}.fasta"
+    shell:
+        "cp {input} {output}"
+
+
+rule run_checkm_lineage_wf:
+    input:
+        touched_output = CHECKM_init_flag,
+        bins = ["{genome}/{genome}.fasta"] # actualy path to fastas
+    output:
+        "{genome}/checkm/completeness.tsv",
+        "{genome}/checkm/storage/tree/concatenated.fasta"
+    params:
+        output_dir = lambda wc, output: os.path.dirname(output[0]),
+        bin_dir= lambda wc, input: os.path.dirname(input.bins[0]),
+    conda:
+        "%s/checkm.yaml" % CONDAENV
+    threads:
+        config.get("threads", 1)
+    shell:
+        """
+        rm -r {params.output_dir}
+        checkm lineage_wf \
+            --file {params.output_dir}/completeness.tsv \
+            --tab_table \
+            --quiet \
+            --extension fasta \
+            --threads {threads} \
+            {prams.bin_dir} \
+            {params.output_dir}
+        """
+
+
+
+rule run_checkm_tree_qa:
+    input:
+        tree="{checkmfolder}/completeness.tsv"
+    output:
+        summary="{checkmfolder}/taxonomy.tsv",
+    params:
+        tree_dir = lambda wc, input: os.path.dirname(input.tree),
+    conda:
+        "%s/checkm.yaml"  % CONDAENV
+    threads:
+        1
+    shell:
+        """
+            checkm tree_qa \
+               {params.tree_dir} \
+               --out_format 4 \
+               --file {output.netwick}
+
+        """
 
 
 CHECKMFILES=[   "%s/taxon_marker_sets.tsv" % CHECKMDIR,
@@ -60,53 +136,6 @@ rule initialize_checkm:
         """
 
 
-rule run_checkm_lineage_wf:
-    input:
-        touched_output = CHECKM_init_flag,
-        bins = bin_folder # actualy path to fastas
-    output:
-        "checkm/completeness.tsv",
-        "checkm/storage/tree/concatenated.fasta"
-    params:
-        output_dir = lambda wc, output: os.path.dirname(output[0])
-    conda:
-        "%s/checkm.yaml" % CONDAENV
-    threads:
-        config.get("threads", 1)
-    shell:
-        """
-        rm -r {params.output_dir}
-        checkm lineage_wf \
-            --file {params.output_dir}/completeness.tsv \
-            --tab_table \
-            --quiet \
-            --extension fasta \
-            --threads {threads} \
-            {input.bins} \
-            {params.output_dir}
-        """
-
-
-
-rule run_checkm_tree_qa:
-    input:
-        tree="{checkmfolder}/completeness.tsv"
-    output:
-        summary="{checkmfolder}/taxonomy.tsv",
-    params:
-        tree_dir = lambda wc, input: os.path.dirname(input.tree),
-    conda:
-        "%s/checkm.yaml"  % CONDAENV
-    threads:
-        1
-    shell:
-        """
-            checkm tree_qa \
-               {params.tree_dir} \
-               --out_format 4 \
-               --file {output.netwick}
-
-        """
 
 #
 # rule checkm_tetra:
