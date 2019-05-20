@@ -1,30 +1,42 @@
 import os
-from glob import glob
-
-#genomes=glob("/Users/silas/Atlas/bins/DASTool3/genomes/*.fasta") + \
-#glob("/Users/silas/PhD/06_Projects/Warm_claire_microbiota/Metagenome/WD/genomes/genomes/*.fasta")
 
 
-
-localrules: gen_genome_list
-rule gen_genome_list:
+localrules: gen_genome_list,combine_fastANI
+rule gen_genome_lists:
     input:
-        genomes=genomes
-    output:
-        genome_list=temp('fastANI_genome_list.txt')
+        filter_genome_folder
+    ourput:
+        directory("clusters/fastani")
+    params:
+        cluster_size=config['fastani']['subset_size']
     run:
-        with open(output.genome_list,'w') as fl:
-            for g in input.genomes:
-                fl.write(f'{g}\n')
+        from glob import glob
+        genomes= glob(os.path.join(input[0],"*.fasta"))
 
+        os.makedirs(output[0])
+
+        c, file=0, None
+        for i,g in enumerate(genomes):
+            if i % params.cluster_size = 0
+                c+=1
+
+                if file is not None: file.close()
+                file = open(os.path.join(output[0],f"Cluster{c}.txt"),'w')
+
+            f.write(f"{g}\n")
+
+
+        file.close()
 
 
 rule fastANI:
     input:
-        genome_list= rules.gen_genome_list.output[0],
-        genomes= genomes
+        list1= "clusters/fastani/Cluster{i}.txt",
+        list2= "clusters/fastani/Cluster{j}.txt"
+        genomes= filter_genome_folder,
+        all_Genomes= genome_folder
     output:
-        "ANIs.txt",
+        "clusters/fastani/ANIcluster{i}-{j}.txt",
     resources:
         mem=30
     threads:
@@ -32,15 +44,32 @@ rule fastANI:
     conda:
         "envs/fastANI.yaml"
     log:
-        "logs/fastANI.log"
+        "logs/fastANI/cluster{i}-{j}.log"
     benchmark:
-        "benchmarks/fastANI.txt"
+        "logs/benchmarks/fastANI/cluster{i}-{j}.log"
     shell:
         " fastANI "
         " --threads {threads} "
-        " --queryList {input.genome_list} --refList {input.genome_list} "
+        " --queryList {input.list1} --refList {input.list2} "
         " -k {config[fastani][k]} "
         " --fragLen {config[fastani][fragLen]} "
         " --minFrag {config[fastani][minFrag]} "
         " -o {output} "
         " 2> {log}"
+
+
+def get_allFastANI(wildcards):
+    ALL_I=  glob_wildcards(os.path.join(checkpoints.mash_cluster.get(**wildcards).output.clusters,
+                                        "Cluster{i}.txt")).i
+
+    return expand("clusters/fastani/ANIcluster{i}-{j}.txt", i=ALL_I,j=ALL_I )
+
+
+rule combine_fastANI:
+    input:
+        get_allFastANI
+    output:
+        "ANI.tsv"
+    shell:
+        "cat {input} > {output};"
+        "rm -r clusters "

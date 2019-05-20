@@ -1,29 +1,4 @@
-if config.get('skip_filter',False):
-    filter_genome_folder= genome_folder
-else:
-    filter_genome_folder='filtered_bins'
 
-    rule filter_genomes:
-        input:
-            dir=os.path.abspath(genome_folder),
-            quality=config['genome_qualities']
-        output:
-            directory(filter_genome_folder)
-        params:
-            filter=config['filter_criteria']
-        run:
-            import pandas as pd
-
-            Q= pd.read_csv(input.quality,sep='\t',index_col=0)
-            assert not Q.index.duplicated().any()
-            filtered= Q.query(params.filter).index
-
-
-
-            os.makedirs(output[0])
-            for f in filtered:
-                os.symlink(os.path.join(input.dir,f),
-                           os.path.join(output[0],f))
 
 rule mash_sketch_genome:
     input:
@@ -94,48 +69,3 @@ checkpoint mash_cluster:
 
         with open(os.path.join(output.singeltons),'w') as f:
             f.write("\n".join(Sinlge_clusters)+'\n')
-
-
-
-rule fastANI:
-    input:
-        genome_list= "clusters/mash/Cluster{i}.txt",
-        genomes= filter_genome_folder,
-        all_Genomes= genome_folder
-    output:
-        "clusters/fastani/ANIcluster{i}.txt",
-    resources:
-        mem=30
-    threads:
-        config['threads']
-    conda:
-        "envs/fastANI.yaml"
-    log:
-        "logs/fastANI/cluster{i}.log"
-    benchmark:
-        "logs/benchmarks/fastANI/cluster{i}.log"
-    shell:
-        " fastANI "
-        " --threads {threads} "
-        " --queryList {input.genome_list} --refList {input.genome_list} "
-        " -k {config[fastani][k]} "
-        " --fragLen {config[fastani][fragLen]} "
-        " --minFrag {config[fastani][minFrag]} "
-        " -o {output} "
-        " 2> {log}"
-
-
-def get_allFastANI(wildcards):
-    ALL_I=  glob_wildcards(os.path.join(checkpoints.mash_cluster.get(**wildcards).output.clusters,
-                                        "Cluster{i}.txt")).i
-    return expand("clusters/fastani/ANIcluster{i}.txt", i=ALL_I )
-
-
-rule combine_fastANI:
-    input:
-        get_allFastANI
-    output:
-        "ANI.tsv"
-    shell:
-        "cat {input} > {output};"
-        "rm -r clusters "
