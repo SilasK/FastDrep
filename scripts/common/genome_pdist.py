@@ -54,6 +54,9 @@ def load_mash(dist_file,simplify_indexes=True):
     F = load_ani_table_(dist_file,['Distance','Pvalue','Fraction'],simplify_indexes=simplify_indexes)
 
     F['Identity']= 1- F.Distance
+    F['Nmapped']=F.Fraction.map(lambda s: int(s.split('/')[0]))
+    F['Ntotal']=F.Fraction.map(lambda s: int(s.split('/')[1]))
+    F['Fraction']=F.Nmapped/F.Ntotal
 
 
     return F
