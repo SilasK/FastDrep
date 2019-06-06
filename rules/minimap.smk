@@ -50,7 +50,7 @@ rule minimap:
     params:
         preset= "asm10" #asm5/asm10/asm20: asm-to-ref mapping, for ~0.1/1/5% sequence divergence
     shell:
-        "minimap2 -x {params.preset} -t {threads} {input.querry} {input.ref}   > {ouput}"
+        "minimap2 -x {params.preset} -t {threads} {input.querry} {input.ref}   > {output}"
 
 import pandas as pd
 def load_paf(paf_file):
