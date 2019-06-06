@@ -1,7 +1,7 @@
 
-input_folder= 'all_bins'
+genome_folder= 'all_bins'
 
-genomes = ['ERR675524_metabat_01', 'ERR675522_maxbin_09', 'FR4_maxbin_13',
+genomes_of_species = dict(ERR675604_metabat_01=['ERR675524_metabat_01', 'ERR675522_maxbin_09', 'FR4_maxbin_13',
        'ERR675523_metabat_01', 'ERR675501_metabat_17', 'F39_maxbin_01_sub',
        'C13_maxbin_22_sub', 'ERR675514_metabat_04', 'SRR4116659_maxbin_23',
        'ERR675581_metabat_01', 'ERR675622_metabat_01', 'ERR675520_maxbin_04',
@@ -33,18 +33,18 @@ genomes = ['ERR675524_metabat_01', 'ERR675522_maxbin_09', 'FR4_maxbin_13',
        'ERR675503_maxbin_21', 'ERR675606_maxbin_2', 'F30_metabat_03',
        'FR6_metabat_27', 'ERR675630_maxbin_16', 'FR2_metabat_004',
        'FR1_maxbin_03', 'ERR675498_maxbin_05', 'ERR675619_maxbin_02',
-       'C12_maxbin_33_sub', 'ERR675618_metabat_01', 'F38_metabat_08']
+       'C12_maxbin_33_sub', 'ERR675618_metabat_01', 'F38_metabat_08'])
 
 rule all:
     input:
-        "Alignments_stats.tsv"
+        "minimap/{species}/alignments_stats.tsv".format(species='ERR675604_metabat_01')
 
 rule minimap:
     input:
-        ref= f"{input_folder}/{{genome2}}.fasta",
-        querry=f"{input_folder}/{{genome1}}.fasta",
+        ref= f"{genome_folder}/{{genome2}}.fasta",
+        querry=f"{genome_folder}/{{genome1}}.fasta",
     output:
-        "paf/{genome1}-{genome2}.paf"
+        "minimap/paf/{genome1}-{genome2}.paf"
     threads:
         3
     params:
@@ -64,12 +64,11 @@ def load_paf(paf_file):
 
     return M
 
-
+from itertools import combinations
 def parse_paf_input(wildcards):
 
-    from itertools import combinations
-
-    return [f"paf/{g1}-{g2}.paf" for g1,g2 in combinations(genomes,2)]
+    genomes = genomes_of_species[wildcards.species]
+    return [f"minimap/paf/{g1}-{g2}.paf" for g1,g2 in combinations(genomes,2)]
 
 
 localrules: parse_paf
@@ -77,7 +76,7 @@ rule parse_paf:
     input:
         parse_paf_input
     output:
-        "Alignments_stats.tsv"
+        "minimap/{species}/alignments_stats.tsv"
     run:
         Out=[]
         for paf_file in input:
