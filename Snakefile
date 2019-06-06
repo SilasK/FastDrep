@@ -22,4 +22,6 @@ include: "rules/mash.smk"
 
 rule all:
     input:
-        "ANI.tsv"
+        "ANI.tsv",
+        #"mash_dists.txt",
+        "genome_stats.tsv"
