@@ -42,7 +42,7 @@ rule fastANI:
     threads:
         config['threads']
     conda:
-        "envs/fastANI.yaml"
+        "../envs/fastANI.yaml"
     log:
         "logs/fastANI/cluster{i}-{j}.log"
     benchmark:

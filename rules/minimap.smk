@@ -1,5 +1,5 @@
 
-genome_folder= 'all_bins'
+
 
 genomes_of_species = dict(ERR675604_metabat_01=['ERR675524_metabat_01', 'ERR675522_maxbin_09', 'FR4_maxbin_13',
        'ERR675523_metabat_01', 'ERR675501_metabat_17', 'F39_maxbin_01_sub',
@@ -35,9 +35,6 @@ genomes_of_species = dict(ERR675604_metabat_01=['ERR675524_metabat_01', 'ERR6755
        'FR1_maxbin_03', 'ERR675498_maxbin_05', 'ERR675619_maxbin_02',
        'C12_maxbin_33_sub', 'ERR675618_metabat_01', 'F38_metabat_08'])
 
-rule all:
-    input:
-        "minimap/{species}/alignments_stats.tsv".format(species='ERR675604_metabat_01')
 
 rule minimap:
     input:
@@ -45,6 +42,8 @@ rule minimap:
         querry=f"{genome_folder}/{{genome1}}.fasta",
     output:
         "minimap/paf/{genome1}-{genome2}.paf"
+    conda:
+        "../envs/minimap2.yaml"
     threads:
         3
     params:
@@ -74,26 +73,30 @@ def parse_paf_input(wildcards):
 localrules: parse_paf
 rule parse_paf:
     input:
-        parse_paf_input
+        paf= parse_paf_input
     output:
         "minimap/{species}/alignments_stats.tsv"
     run:
-        Out=[]
-        for paf_file in input:
 
-            M= load_paf(paf_file)
+        with open(output[0],'w') as out:
 
-            parsed= {}
-            M.sort_values('Identity',inplace=True,ascending=False)
+            out.write("\t".join(['genome1','genome2','Identity','Length',
+                                 'Length_at99id','Length_at95id','Id_at90length'])+'\n')
 
-            parsed['average_id'] = (M.Allength*M.Identity).sum() / M.Allength.sum()
-            parsed['Id90'] = M.loc[0.9*M.Allength.sum() <= M.Allength.cumsum()].iloc[0].Identity
-            parsed['allength99'] = M.query('Identity>=0.99').Allength.sum()
-            parsed['allength95'] = M.query('Identity>=0.95').Allength.sum()
+            for paf_file in input.paf:
 
-            parsed= pd.Series(parsed,name=(wildcards.genome1,wildcards.genome2))
+                M= load_paf(paf_file)
 
-            Out.append(parsed)
+                M.sort_values('Identity',inplace=True,ascending=False)
 
+                genome1,genome2 = os.path.splitext(os.path.split(paf_file)[-1])[0].split('-')
+                Identity = (M.Allength*M.Identity).sum() / M.Allength.sum()
+                Length= M.Allength.sum()
 
-        pd.concat(Out).to_csv(output[0],sep='\t')
+                Length_at99id = M.query('Identity>=0.99').Allength.sum()
+                Length_at95id = M.query('Identity>=0.95').Allength.sum()
+
+                Id_at90length = M.loc[0.9*M.Allength.sum() <= M.Allength.cumsum()].iloc[0].Identity
+
+                out.write(f"{genome1}\t{genome2}\t{Identity}\t{Length}\t"
+                          f"{Length_at99id}\t{Length_at95id}\t{Id_at90length}\n")
