@@ -44,6 +44,3 @@ download_genome:
         "ftp_list.txt"
     output:
         expand("genomes",accession=accessions)
-
-
-include: "rules/other.smk"

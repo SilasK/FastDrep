@@ -16,6 +16,7 @@ sys.path.append(os.path.join(os.path.dirname(workflow.snakefile),'scripts'))
 include: "rules/filter.smk"
 include: "rules/fastani.smk"
 include: "rules/mash.smk"
+include: "rules/minimap.smk"
 
 
 
