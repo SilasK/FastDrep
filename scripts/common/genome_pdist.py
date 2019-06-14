@@ -122,14 +122,15 @@ def extarnilize_index(indexes,genomefolder,extension='.fasta'):
 
 
 
-
-
-def clustermap(Identity):
+def clustermap(DistanceMatrix,linkage_method='average',**kws):
     import seaborn as sns
     import scipy.spatial as sp, scipy.cluster.hierarchy as hc
 
-    D= Identity.unstack()
-    linkage = hc.linkage(1-D.fillna(1), method='single')
+    linkage = hc.linkage(sp.distance.squareform(DistanceMatrix), method=linkage_method)
 
-    cg= sns.clustermap(sp.squareform(D.fillna(0)), row_linkage=linkage, col_linkage=linkage)
+    cg=sns.clustermap(1-DistanceMatrix,
+               row_linkage= linkage, col_linkage=linkage,
+               **kws
+                )
+
     return cg
