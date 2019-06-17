@@ -54,7 +54,7 @@ rule parse_paf:
         paf= parse_paf_input,
         genome_stats= "genome_stats.tsv"
     output:
-        "minimap/{species}_alignments.tsv"
+        "alignments_stats.tsv"
     group:
         "minimap2"
     run:
