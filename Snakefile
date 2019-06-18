@@ -24,5 +24,5 @@ include: "rules/minimap.smk"
 rule all:
     input:
         "ANI.tsv",
-        #"mash_dists.txt",
+        "mash_dists.txt",
         "genome_stats.tsv"
