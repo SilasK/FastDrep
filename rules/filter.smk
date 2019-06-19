@@ -20,29 +20,34 @@ else:
             Q= pd.read_csv(input.quality,sep='\t',index_col=0)
             assert not Q.index.duplicated().any()
 
-            files_in_folder= set(os.listdir(input.dir))
-            intersection = Q.index.intersection(files_in_folder)
+            Q= gd.simplify_indexes(Q)
 
-            missing_quality= files_in_folder.difference(intersection)
+            files_in_folder= pd.Series(os.listdir(input.dir))
+
+            files_in_folder.index= files_in_folder.apply(lambda f: os.path.splitext(f)[0])
+
+            intersection = Q.index.intersection(files_in_folder.index)
+
+            missing_quality= files_in_folder.index.difference(intersection)
             if len(missing_quality) >0:
-                logger.info("missing quality information for following files:"
-                            "\n".join(missing_quality))
-
+                logger.error(f"missing quality information for following files: {missing_quality}")
 
             missing_fasta= Q.index.difference(intersection)
             if len(missing_fasta) >0:
-                logger.info("missing fasta file for following genomes:"
-                            "\n".join(missing_fasta))
+                logger.error(f"missing fasta file for following genomes: {missing_fasta}")
+
 
             Q= Q.loc[intersection]
 
 
-            filtered= Q.query(params.filter).index
+            filtered=  files_in_folder.loc[Q.query(params.filter).index]
 
 
+            if filtered.shape[0]<2:
+                raise Exception("Less than 2 genomes pass quality filter")
 
             os.makedirs(output[0])
-            for f in filtered:
+            for f in filtered.values:
                 os.symlink(os.path.join(input.dir,f),
                            os.path.join(output[0],f))
 
