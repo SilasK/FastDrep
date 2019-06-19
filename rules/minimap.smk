@@ -1,7 +1,6 @@
 
 
 
-Mapping= pd.Series()
 
 
 rule minimap:
@@ -21,17 +20,7 @@ rule minimap:
     shell:
         "minimap2 -x {params.preset} -t {threads} {input.querry} {input.ref}   > {output}"
 
-import pandas as pd
-def load_paf(paf_file):
 
-    M= pd.read_csv(paf_file,header=None,sep='\t',usecols=range(12))
-    M.columns=['Contig2','Length2','Start2','End2',
-               'Strand',
-               'Contig1','Length1','Start1','End1',
-               'Nmatches','Allength','Quality']
-    M['Identity']= M.Nmatches/M.Allength
-
-    return M
 
 
 def parse_paf_input(wildcards):
@@ -41,7 +30,7 @@ def parse_paf_input(wildcards):
 
     with open(alignment_list) as f:
         for line in f:
-            g1,g2= f.strip().split()
+            g1,g2= line.strip().split()
             paf_files.append(f"minimap/paf/{g1}-{g2}.paf")
     return paf_files
 
@@ -59,6 +48,7 @@ rule parse_paf:
         "minimap2"
     run:
 
+        from common.alignments import load_paf
         stats= pd.read_table(input.genome_stats,index_col=0)
 
         with open(output[0],'w') as out:

@@ -38,7 +38,7 @@ rule mash_calculate_dist:
 
 
 
-
+localrules: filter_mash
 checkpoint filter_mash:
     input:
         rules.mash_calculate_dist.output
@@ -48,7 +48,8 @@ checkpoint filter_mash:
         treshold=config['mash']['dist_treshold']
     run:
 
-        F= load_mash(input[0])
+
+        F= gd.load_mash(input[0])
         G= gd.to_graph(F.query(f"Distance<={params.treshold}"))
         G.remove_edges_from(G.selfloop_edges())
 
