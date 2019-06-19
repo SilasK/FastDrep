@@ -35,3 +35,23 @@ rule mash_calculate_dist:
         "logs/mash/dist.log"
     shell:
         "mash dist -p {threads} -d {params.d} {input.genomes} {input.genomes} > {output[0]} 2> {log}"
+
+
+
+
+checkpoint filter_mash:
+    input:
+        rules.mash_calculate_dist.output
+    output:
+        temp("alignment_list.txt")
+    params:
+        treshold=config['mash']['dist_treshold']
+    run:
+
+        F= load_mash(input[0])
+        G= gd.to_graph(F.query(f"Distance<={params.treshold}"))
+        G.remove_edges_from(G.selfloop_edges())
+
+        with open(output[0],'w') as fout:
+            for e in G.edges():
+                fout.write("\t".join(sorted(e))+'\n')
