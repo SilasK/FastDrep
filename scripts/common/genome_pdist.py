@@ -9,7 +9,7 @@ import os
 def simplify_indexes(df):
     "assumes indexes are path of files, removes extesnion and dirname"
 
-    path= df.index[0][0]
+    path= df.index[0]
     extension= os.path.splitext(path)[-1]
     dir_name= os.path.dirname(path)+'/'
 
