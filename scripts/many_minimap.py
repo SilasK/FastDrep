@@ -8,9 +8,9 @@ from snakemake.shell import shell
 from common.alignments import parse_paf_files
 
 
-def run_minimap(ref,query,paf,preset=snakemake.params.minimap_preset,
+def run_minimap(ref,query,paf,options=snakemake.params.minimap_extra,
                 threads=snakemake.threads,log=snakemake.log[0]):
-    shell("minimap2 -x {preset} -t {threads} {ref} {query}   > {paf} 2> {log}")
+    shell("minimap2 {options} -t {threads} {ref} {query}   > {paf} 2> {log}")
 
 def many_minimap(alignment_list,genome_folder,paf_folder,extension='.fasta'):
 
