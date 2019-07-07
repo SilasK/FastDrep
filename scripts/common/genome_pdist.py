@@ -18,14 +18,14 @@ def simplify_indexes(df):
 
     return df.rename(index=simplify)
 
-def load_ani_table_(dist_file,header=None,simplify_indexes=False):
+def load_ani_table_(dist_file,header=None,simplify_names=False):
 
     F = pd.read_csv(dist_file,sep='\t',header=None,index_col=[0,1])
 
     F.columns= header
     F.index.names=['Genome1','Genome2']
 
-    if simplify_indexes:
+    if simplify_names:
 
         F= simplify_indexes(F)
 
@@ -41,20 +41,20 @@ def load_ani_table_(dist_file,header=None,simplify_indexes=False):
 
 
 
-def load_fastani(dist_file,simplify_indexes=True):
+def load_fastani(dist_file,simplify_names=True):
     """Loads fastANI output calculates overlap.
     Outputs a table with ['Genome1','Genome2','Identity','Nmapped','Ntotal','Overlap' ] in header"""
 
-    F = load_ani_table_(dist_file,['Identity','Nmapped','Ntotal'],simplify_indexes=simplify_indexes)
+    F = load_ani_table_(dist_file,['Identity','Nmapped','Ntotal'],simplify_names=simplify_names)
     F.loc[:,'Overlap']= F.Nmapped.values/F.Ntotal.values
     F['Identity']/=100.
 
     return F
 
-def load_mash(dist_file,simplify_indexes=True):
+def load_mash(dist_file,simplify_names=True):
     """Loads fastANI output calculates overlap.
     Outputs a table with ['Genome1','Genome2','Distance','Pvalue','Fraction','Identity'] in header"""
-    F = load_ani_table_(dist_file,['Distance','Pvalue','Fraction'],simplify_indexes=simplify_indexes)
+    F = load_ani_table_(dist_file,['Distance','Pvalue','Fraction'],simplify_names=simplify_names)
 
     F['Identity']= 1- F.Distance
     F['Nmapped']=F.Fraction.map(lambda s: int(s.split('/')[0]))
