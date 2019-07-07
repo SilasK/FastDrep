@@ -17,7 +17,7 @@ include: "rules/filter.smk"
 include: "rules/fastani.smk"
 include: "rules/mash.smk"
 include: "rules/minimap.smk"
-
+include: "rules/pyani.smk"
 
 
 
@@ -27,3 +27,5 @@ rule all:
         "mash_dists.txt",
         "alignments_stats.tsv",
         "genome_stats.tsv"
+
+        
