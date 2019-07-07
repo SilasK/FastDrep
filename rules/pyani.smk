@@ -9,7 +9,9 @@ rule pyani:
         filter_genome_folder,
         genome_folder
     output:
-        directory("pyani/{method}")
+        "pyani/{method}/{method}_percentage_identity.tab"
+    params:
+        outdir= "pyani/{method}"
     threads:
         config['threads']
     conda:
@@ -18,5 +20,5 @@ rule pyani:
         "logs/pyani/{method}.log"
     shell:
         "average_nucleotide_identity.py "
-        "-i {input[0]} -o {output[0]} "
+        "-i {input[0]} -o {params.outdir} "
         "-m {wildcards.method} -g -l {log}"

@@ -23,9 +23,8 @@ include: "rules/pyani.smk"
 
 rule all:
     input:
-        #"ANI.tsv",
+        "ANI.tsv",
+        expand("pyani/{method}/{method}_percentage_identity.tab",method=['ANIm','ANIb']),
         "mash_dists.txt",
         "alignments_stats.tsv",
         "genome_stats.tsv"
-
-        
