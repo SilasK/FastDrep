@@ -43,15 +43,24 @@ checkpoint filter_mash:
     input:
         rules.mash_calculate_dist.output[0]
     output:
-        temp("alignment_list.txt")
+        temp(directory('minimap/alignment_lists'))
     params:
-        treshold=config['mash']['dist_treshold']
+        treshold=config['mash']['dist_treshold'],
+        N= 1000
     run:
 
         F= gd.load_mash(input[0])
         G= gd.to_graph(F.query(f"Distance<={params.treshold}"))
         G.remove_edges_from(G.selfloop_edges())
 
-        with open(output[0],'w') as fout:
-            for e in G.edges():
+        os.makedirs(output[0])
+
+
+        fout=None
+        for i,e in enumerate(G.edges()):
+            if (i % params.N) ==0:
+                n= int(i // params.N )
+                if fout is not None: fout.close()
+                fout= open(f"{output[0]}/subset_{n}.txt",'w')
+            else:
                 fout.write("\t".join(sorted(e))+'\n')
