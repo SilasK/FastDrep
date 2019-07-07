@@ -38,7 +38,7 @@ rule many_minimap:
     conda:
         "../envs/minimap2.yaml"
     params:
-        minimap_preset= "asm10", #asm5/asm10/asm20: asm-to-ref mapping, for ~0.1/1/5% sequence divergence
+        minimap_extra= "-c --secondary=no",#"-x asm10", #asm5/asm10/asm20: asm-to-ref mapping, for ~0.1/1/5% sequence divergence
         paf_folder="minimap/paf",
         extension='.fasta'
     script:

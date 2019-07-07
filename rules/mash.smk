@@ -22,7 +22,7 @@ rule mash_sketch_genome:
 
 rule mash_calculate_dist:
     input:
-        genomes=rules.mash_sketch_genome.output,
+        genomes=rules.mash_sketch_genome.output
     output:
         "mash_dists.txt"
     params:
