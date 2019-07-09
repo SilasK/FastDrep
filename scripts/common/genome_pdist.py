@@ -6,18 +6,16 @@ import warnings
 import os
 
 
-def simplify_indexes(df):
-    "assumes indexes are path of files, removes extesnion and dirname"
+def simplify_index(index):
+    "assumes single index are path of files, removes extesnion and dirname"
 
 
-    path= df.index.get_level_values(0)[0]
+    path= index[0]
     extension= os.path.splitext(path)[-1]
     dir_name= os.path.dirname(path)+'/'
 
-    def simplify(index):
-        return index.replace(extension,'').replace(dir_name,'')
+    return index.str.replace(extension,'').str.replace(dir_name,'')
 
-    return df.rename(index=simplify)
 
 def load_ani_table_(dist_file,header=None,simplify_names=False):
 
@@ -28,7 +26,8 @@ def load_ani_table_(dist_file,header=None,simplify_names=False):
 
     if simplify_names:
 
-        F= simplify_indexes(F)
+        F.index =pd.MultiIndex(levels= [simplify_index(F.index.levels[0]),
+                              simplify_index(F.index.levels[1])],labels= F.index.labels  ) 
 
 
 

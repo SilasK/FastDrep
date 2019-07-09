@@ -20,7 +20,7 @@ else:
             Q= pd.read_csv(input.quality,sep='\t',index_col=0)
             assert not Q.index.duplicated().any(), f"duplicated indexes in {input.quality}"
 
-            Q= gd.simplify_indexes(Q)
+            Q.index= gd.simplify_index(Q.index)
 
             files_in_folder= pd.Series(os.listdir(input.dir))
 
