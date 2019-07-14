@@ -1,4 +1,28 @@
 
+rule calculate_stats:
+    input:
+        genome_folder,
+    output:
+        "genome_stats.tsv"
+    threads:
+        10
+    run:
+        from common.genome_stats import get_genome_stats
+        from common import genome_pdist as gd
+        from multiprocessing import Pool
+
+        import pandas as pd
+
+
+        pool = Pool(threads)
+
+        fasta_files= glob(f"{input[0]}/*.fasta")
+
+        results= pool.map(get_genome_stats,fasta_files)
+        Stats= pd.DataFrame(results,columns=['Length','N50'],index=fasta_files)
+        Stats.index= gd.simplify_index(Stats.index)
+
+        Stats.to_csv(output[0],sep='\t')
 
 if config.get('skip_filter',False):
     filter_genome_folder= genome_folder
@@ -9,16 +33,22 @@ else:
     rule filter_genomes:
         input:
             dir=os.path.abspath(genome_folder),
-            quality=config['genome_qualities']
+            quality=config['genome_qualities'],
+            genome_stats= rules.calculate_stats.output
         output:
             directory(filter_genome_folder)
         params:
-            filter=config['filter_criteria']
+            quality_filter=config['qualityfilter_criteria'],
+            genome_filter=config['filter_criteria']
+
         run:
             import pandas as pd
 
+            genome_stats= pd.read_csv(input.genome_stats,index_col=0)
             Q= pd.read_csv(input.quality,sep='\t',index_col=0)
             assert not Q.index.duplicated().any(), f"duplicated indexes in {input.quality}"
+
+
 
             Q.index= gd.simplify_index(Q.index)
 
@@ -36,11 +66,12 @@ else:
             if len(missing_fasta) >0:
                 logger.error(f"missing fasta file for following genomes: {missing_fasta}")
 
-
+            Q=Q.join(genome_stats)
             Q= Q.loc[intersection]
 
 
-            filtered=  files_in_folder.loc[Q.query(params.filter).index]
+
+            filtered=  files_in_folder.loc[Q.query(params.genome_filter).query(params.quality_filter).index]
 
 
             if filtered.shape[0]<2:
@@ -50,21 +81,3 @@ else:
             for f in filtered.values:
                 os.symlink(os.path.join(input.dir,f),
                            os.path.join(output[0],f))
-
-
-
-rule calculate_stats:
-    input:
-        filter_genome_folder,
-        genome_folder
-    output:
-        "genome_stats.tsv"
-    run:
-        from common.genome_stats import get_genome_stats
-        import pandas as pd
-
-        Stats= pd.DataFrame(columns=['Total_length','N50'])
-        for fasta_file in glob(f"{input[0]}/*.fasta"):
-            sample = os.path.splitext(fasta_file)[0].replace(f'{input[0]}/','')
-            Stats.loc[sample]= get_genome_stats(fasta_file)
-        Stats.to_csv(output[0],sep='\t')
