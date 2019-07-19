@@ -1,6 +1,23 @@
 
 
-
+# rule minimap_index:
+#     input:
+#         fasta= f"{filter_genome_folder}/{genome}.fasta",
+#     output:
+#         "minimap/index/{genome}.mmi"
+#     conda:
+#         "../envs/minimap2.yaml"
+#     group:
+#         "minimap2"
+#     conda:
+#         "../envs/minimap2.yaml"
+#     threads:
+#         config['threads']
+#     params:
+#         extra= "-x asm10" #asm5/asm10/asm20: asm-to-ref mapping, for ~0.1/1/5% sequence divergence
+#     shell:
+#         "minimap2 {params.preset}  -t {threads} -d {output} {input.fasta}   2> {log}"
+#
 
 
 rule minimap:
