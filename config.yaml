@@ -12,4 +12,4 @@ fastani:
 genome_folder: 'all_bins'
 genome_qualities: 'Checkm_quality_allbins.tsv'
 qualityfilter_criteria: '(completeness-5*contamination)>=50'
-filter_criteria: "NG50>5000"
+filter_criteria: "N50>5000"

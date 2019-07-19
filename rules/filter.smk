@@ -34,7 +34,7 @@ else:
         input:
             dir=os.path.abspath(genome_folder),
             quality=config['genome_qualities'],
-            genome_stats= rules.calculate_stats.output
+            genome_stats= rules.calculate_stats.output[0]
         output:
             directory(filter_genome_folder)
         params:
@@ -44,7 +44,7 @@ else:
         run:
             import pandas as pd
 
-            genome_stats= pd.read_csv(input.genome_stats,index_col=0)
+            genome_stats= pd.read_csv(input.genome_stats,index_col=0,sep='\t')
             Q= pd.read_csv(input.quality,sep='\t',index_col=0)
             assert not Q.index.duplicated().any(), f"duplicated indexes in {input.quality}"
 
@@ -67,6 +67,7 @@ else:
                 logger.error(f"missing fasta file for following genomes: {missing_fasta}")
 
             Q=Q.join(genome_stats)
+
             Q= Q.loc[intersection]
 
 
