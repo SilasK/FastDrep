@@ -28,13 +28,16 @@ def get_genome_stats(fasta_file):
 
 
     Lengths= np.array(Lengths)
-
-
     Total_length= Lengths.sum()
 
-    Lengths.sort()
-    Lengths= Lengths[-1:0:-1] # sort length to shortest
+    if len(Lengths)==0:
+        raise IOError(f"file {fasta_file} has no contigs")
+    elif len(Lengths)==1:
+        N50=1
+    else:
+        Lengths.sort()
+        Lengths= Lengths[-1:0:-1] # sort length to shortest
 
-    N50= Lengths[Lengths.cumsum() >= Total_length/2][0] # get first contig with cumsum larger than 50% of Total length
+        N50= Lengths[Lengths.cumsum() >= Total_length/2][0] # get first contig with cumsum larger than 50% of Total length
 
     return Total_length, N50

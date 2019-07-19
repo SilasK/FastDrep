@@ -3,7 +3,7 @@ mash:
    k: 21
    sketch_size: 1e4 # 1e3
    max_dist: 0.2
-   dist_treshold: 0.1
+   dist_treshold: 0.05
 fastani:
   k: 16
   fragLen: 3000

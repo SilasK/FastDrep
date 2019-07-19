@@ -18,9 +18,9 @@ rule minimap:
     threads:
         3
     params:
-        preset= "asm10" #asm5/asm10/asm20: asm-to-ref mapping, for ~0.1/1/5% sequence divergence
+        preset= "-c --secondary=no" #asm5/asm10/asm20: asm-to-ref mapping, for ~0.1/1/5% sequence divergence
     shell:
-        "minimap2 -x {params.preset} -t {threads} {input.querry} {input.ref}   > {output}"
+        "minimap2 {params.preset}  -t {threads} {input.querry} {input.ref}   > {output}"
 
 
 
@@ -38,7 +38,7 @@ rule many_minimap:
     conda:
         "../envs/minimap2.yaml"
     params:
-        minimap_extra= "-c --secondary=no",#"-x asm10", #asm5/asm10/asm20: asm-to-ref mapping, for ~0.1/1/5% sequence divergence
+        minimap_extra= "-c --secondary=no", #"-x asm10", #asm5/asm10/asm20: asm-to-ref mapping, for ~0.1/1/5% sequence divergence
         paf_folder="minimap/paf",
         extension='.fasta'
     script:
