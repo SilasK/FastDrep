@@ -2,22 +2,22 @@
 
 
 
-
 rule pyani:
     input:
         filter_genome_folder,
         genome_folder
     output:
-        "pyani/{method}/{method}_percentage_identity.tab"
-    params:
-        outdir= "pyani/{method}"
+        directory("pyani/{method}") #{method}_percentage_identity.tab"
     threads:
         config['threads']
     conda:
         "../envs/pyani.yaml"
     log:
         "logs/pyani/{method}.log"
+    threads:
+        12
     shell:
-        "average_nucleotide_identity.py "
-        "-i {input[0]} -o {params.outdir} "
+        "average_nucleotide_identity.py --noclobber "
+        "--workers {threads} "
+        "-i {input[0]} -o {output[0]} "
         "-m {wildcards.method} -g -l {log}"
