@@ -16,7 +16,7 @@ rule minimap:
     conda:
         "../envs/minimap2.yaml"
     threads:
-        3
+        config['threads']
     params:
         preset= "-c --secondary=no" #asm5/asm10/asm20: asm-to-ref mapping, for ~0.1/1/5% sequence divergence
     shell:
@@ -34,7 +34,7 @@ rule many_minimap:
     log:
         "logs/minimap2/subset_{n}.txt"
     threads:
-        3
+        config['threads']
     conda:
         "../envs/minimap2.yaml"
     params:
