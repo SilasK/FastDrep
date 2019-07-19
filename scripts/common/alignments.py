@@ -1,13 +1,36 @@
 import pandas as pd
 import os
-def load_paf(paf_file):
 
-    M= pd.read_csv(paf_file,header=None,sep='\t',usecols=range(12))
-    M.columns=['Contig2','Length2','Start2','End2',
+
+
+MINIMAP_HEADERS=['Contig2','Length2','Start2','End2',
                'Strand',
                'Contig1','Length1','Start1','End1',
                'Nmatches','Allength','Quality']
-    M['Identity']= M.Nmatches/M.Allength
+
+
+
+def load_paf(paf_file):
+
+    M= pd.read_csv(paf_file,header=None,sep='\t')
+
+
+    if M.shape[1]>len(MINIMAP_HEADERS):
+        Tags= M.iloc[:,len(MINIMAP_HEADERS):]
+
+
+        assert not Tags.isnull().any().any(), f"Missing sam tags {Tags.loc[Tags.isnull().any()]}"
+
+        M.iloc[:,len(MINIMAP_HEADERS):]= Tags.applymap(lambda s: s.split(':')[2])
+        Tag_names=list(Tags.iloc[0].apply(lambda s: s.split(':')[0]))
+
+        M.columns=MINIMAP_HEADERS+Tag_names
+        # some values are 0.0000, some are negative
+        M['Identity']= 1- M.de.replace('0.0000',0.00005).astype(float).apply(lambda d: max(d,0))
+    else:
+
+        M.columns= MINIMAP_HEADERS
+
 
     return M
 
