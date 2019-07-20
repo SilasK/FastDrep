@@ -7,64 +7,79 @@ MINIMAP_HEADERS=['Contig2','Length2','Start2','End2',
                'Strand',
                'Contig1','Length1','Start1','End1',
                'Nmatches','Allength','Quality']
+MINIMAP_DATATYPES= [str,int,int,int,str,str,int,int,int,int,int,int]
+
+assert len(MINIMAP_HEADERS)==len(MINIMAP_DATATYPES)
 
 
 
-def get_tag_names(row):
-    return row.apply(lambda s: s.split(':')[0]).values
+minimap_dtypes_map= {'i':int,'f':float}
 
-def get_tag_values(row):
-    return row.apply(lambda s: s.split(':')[2]).values
 
-def get_tag_dtypes(row):
-    minimap_dtypes_map= lambda s: {'i':int,'f':float}.get(s,str)
+def parse_minimap_tag(tag,out={}):
 
-    return row.apply(lambda s: s.split(':')[1]).map(minimap_dtypes_map).values
+    name,dtype,value = tag.split(':')
+
+    dtype=minimap_dtypes_map.get(dtype,str)
+
+    out[name]= dtype(value)
+
+def parse_minimap_line(line):
+    """parses a minmap paf line, return a dict.
+
+    reads tags and converts datatyes"""
+    elements= line.strip().split()
+    print([e[:3] for e in elements])
+    out={}
+
+    if not len(elements)==0:
+
+        try:
+
+
+
+
+            for i,h in enumerate(MINIMAP_HEADERS):
+
+
+                dtype = MINIMAP_DATATYPES[i]
+                out[h]= dtype(elements[i])
+
+
+
+            for i in range(len(MINIMAP_HEADERS),len(elements)):
+
+                parse_minimap_tag(elements[i],out)
+
+
+        except Exception as e:
+            raise IOError(f'Error during parsing paf line : {elements}') from e
+
+    return out
 
 
 def load_paf(paf_file):
 
     try:
 
+        parsed=[]
+        with open(paf_file) as f:
+            for line in f:
+                line= f.readline()
+                parsed.append(parse_minimap_line(line))
 
-        M= pd.read_csv(paf_file,header=None,sep='\t')
+        M=pd.DataFrame(parsed).dropna(how='all')
 
+        # some values are 0.0000, some are negative
+        M['Identity']= 1- M.de #.replace('0.0000',0.00005).astype(float).apply(lambda d: max(d,0))
 
-        if M.shape[1]==len(MINIMAP_HEADERS):
-            M.columns= MINIMAP_HEADERS
+        headers=MINIMAP_HEADERS+['Identity']
+        #rearange headers
+        M=M.loc[:, headers+list(M.columns.drop(headers))]
 
-        elif M.shape[1]>len(MINIMAP_HEADERS):
-
-            Tags= M.iloc[:,len(MINIMAP_HEADERS):]
-            M= M.iloc[:,:len(MINIMAP_HEADERS)]
-            M.columns= MINIMAP_HEADERS
-
-
-            row_with_all_tags= Tags.loc[Tags.isnull().sum(1).idxmin()]
-
-            Tag_names= get_tag_names(row_with_all_tags)
-
-            M= pd.concat((M,pd.DataFrame(index=Tags.index,columns= Tag_names)),axis=1)
-
-
-            for i,row in  Tags.iterrows():
-                row.dropna(inplace=True)
-                M.loc[i,get_tag_names(row)]= get_tag_values(row)
-
-            M.loc[:,Tag_names]
-
-            # some values are 0.0000, some are negative
-            M['Identity']= 1- M.de.replace('0.0000',0.00005).astype(float).apply(lambda d: max(d,0))
-
-            # change dtype
-            #M.loc[:,Tag_names]= M.loc[:,Tag_names].astype(get_tag_dtypes(row_with_all_tags))
-
-        else:
-
-            raise IOError(f"I have less than the expected coumns in file {paf_file}")
 
     except Exception as e:
-        raise IOError(f'Error during parsing paf file: {paf_file}')
+        raise IOError(f'Error during parsing paf file: {paf_file}') from e
 
     return M
 
@@ -86,16 +101,18 @@ def parse_paf_files(paf_files,genome_stats_file,output_file):
             M.sort_values('Identity',inplace=True,ascending=False)
 
             genome1,genome2 = os.path.splitext(os.path.split(paf_file)[-1])[0].split('-')
-            Identity = M.Nmatches.sum() / M.Allength.sum()
+            Identity = (M.Identity*M.Allength).sum() / M.Allength.sum()
             Length= M.Allength.sum()
 
             min_genome_size= stats.loc[[genome1,genome2],'Total_length'].min()
+            AlignedFraction =Length / min_genome_size
+
 
 
             Length_at99id = M.query('Identity>=0.99').Allength.sum()
             Length_at95id = M.query('Identity>=0.95').Allength.sum()
 
-            AlignedFraction =Length / min_genome_size
+
             AlignedFraction95= Length_at95id / min_genome_size
             AlignedFraction99= Length_at99id / min_genome_size
 

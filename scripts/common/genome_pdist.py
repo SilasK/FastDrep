@@ -27,7 +27,7 @@ def load_ani_table_(dist_file,header=None,simplify_names=False):
     if simplify_names:
 
         F.index =pd.MultiIndex(levels= [simplify_index(F.index.levels[0]),
-                              simplify_index(F.index.levels[1])],labels= F.index.labels  ) 
+                              simplify_index(F.index.levels[1])],labels= F.index.labels  )
 
 
 
@@ -108,6 +108,60 @@ def map_to_best_genome(G,quality_score):
 
 
     return Mapping
+
+
+def group_species_linkage(M,threshold = 0.95,fillna=0.8,plot=False,linkage_method='average',square=False):
+
+    assert threshold>0.3, "threshold is an identity value"
+
+    cutoff = (1-threshold)
+
+
+    ID= M.Identity.unstack()
+    ID= ID.loc[ID.index,ID.index]
+
+    #take smaler of both comparisons (fastANI)
+    # ID= ID+(ID.T-ID).applymap(lambda s: min(s,0))
+    # ID.values[np.eye(ID.shape[0],dtype=bool)]=1
+
+
+    Dist= (1-ID.fillna(fillna))
+    if square:
+        cutoff= cutoff**2
+        Dist=Dist.pow(2)
+
+    linkage = hc.linkage(sp.distance.squareform(Dist), method=linkage_method)
+    labels= pd.Series(hc.fcluster(linkage,cutoff,criterion='distance'), index= Dist.index)
+
+
+
+    if plot:
+        colors= labels.map(dict(zip(labels.unique(),sns.color_palette('Paired',n_colors= len(labels.unique())  )  )))
+
+
+        sns.clustermap(ID,row_linkage=linkage, col_linkage=linkage,
+                      row_colors=colors,col_colors=colors)
+
+    return labels
+
+def load_quality(checkm_file):
+    Q= pd.read_table(checkm_file, index_col=0)
+    Q= Q.rename(columns={'strain heterogeneity':'strain_heterogeneity'})
+    Q.index= Q.index.str.replace('.fasta','')
+
+    return Q
+
+def best_genome_from_table(Grouping,quality_score):
+
+    Mapping = pd.Series(index=Grouping.index)
+
+    for group in Grouping.unique():
+        genomes= Grouping.index[Grouping==group]
+        representative= quality_score.loc[genomes].idxmax()
+        Mapping.loc[genomes]=representative
+
+    return Mapping
+
 
 def internalize_index(index, genomefolder,extension='.fasta'):
     """adapts indexes of genomes to represent the full path to genome, this is for internal use

@@ -8,7 +8,7 @@ fastani:
   k: 16
   fragLen: 3000
   minFrag: 50
-  subset_size: 1000
+  subset_size: 100
 genome_folder: 'all_bins'
 genome_qualities: 'Checkm_quality_allbins.tsv'
 qualityfilter_criteria: '(completeness-5*contamination)>=50'

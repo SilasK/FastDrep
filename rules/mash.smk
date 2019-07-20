@@ -38,6 +38,24 @@ rule mash_calculate_dist:
 
 
 
+
+# rule group_species_mash:
+#     input:
+#         mash_dists=
+#         quality=
+#     output:
+#
+#     params:
+#         threshold = 0.95,
+#         fillna=0.8,
+#         linkage_method='average',
+#         square=False
+#     run:
+#         M= gd.load_mash(input.mash_dists)
+#         labels= gd.group_species_linkage(M,**params)
+#
+#         Mapping_species= best_genome_from_table(labels,Q.QualityScore)
+
 localrules: filter_mash
 checkpoint filter_mash:
     input:
