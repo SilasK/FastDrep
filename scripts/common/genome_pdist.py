@@ -27,7 +27,7 @@ def load_ani_table_(dist_file,header=None,simplify_names=False):
     if simplify_names:
 
         F.index =pd.MultiIndex(levels= [simplify_index(F.index.levels[0]),
-                              simplify_index(F.index.levels[1])],labels= F.index.labels  )
+                              simplify_index(F.index.levels[1])],codes= F.index.codes  )
 
 
 
