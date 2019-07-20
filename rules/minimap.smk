@@ -35,7 +35,7 @@ rule minimap:
     threads:
         config['threads']
     params:
-        preset= "-c --secondary=no" #asm5/asm10/asm20: asm-to-ref mapping, for ~0.1/1/5% sequence divergence
+        preset= "-c --secondary=no -x asm10" #asm5/asm10/asm20: asm-to-ref mapping, for ~0.1/1/5% sequence divergence
     shell:
         "minimap2 {params.preset}  -t {threads} {input.querry} {input.ref}   > {output}"
 
