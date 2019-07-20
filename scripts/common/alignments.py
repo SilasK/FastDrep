@@ -10,27 +10,61 @@ MINIMAP_HEADERS=['Contig2','Length2','Start2','End2',
 
 
 
+def get_tag_names(row):
+    return row.apply(lambda s: s.split(':')[0]).values
+
+def get_tag_values(row):
+    return row.apply(lambda s: s.split(':')[2]).values
+
+def get_tag_dtypes(row):
+    minimap_dtypes_map= lambda s: {'i':int,'f':float}.get(s,str)
+
+    return row.apply(lambda s: s.split(':')[1]).map(minimap_dtypes_map).values
+
+
 def load_paf(paf_file):
 
-    M= pd.read_csv(paf_file,header=None,sep='\t')
+    try:
 
 
-    if M.shape[1]>len(MINIMAP_HEADERS):
-        Tags= M.iloc[:,len(MINIMAP_HEADERS):]
+        M= pd.read_csv(paf_file,header=None,sep='\t')
 
 
-        assert not Tags.isnull().any().any(), f"Missing sam tags {Tags.loc[Tags.isnull().any()]}"
+        if M.shape[1]==len(MINIMAP_HEADERS):
+            M.columns= MINIMAP_HEADERS
 
-        M.iloc[:,len(MINIMAP_HEADERS):]= Tags.applymap(lambda s: s.split(':')[2])
-        Tag_names=list(Tags.iloc[0].apply(lambda s: s.split(':')[0]))
+        elif M.shape[1]>len(MINIMAP_HEADERS):
 
-        M.columns=MINIMAP_HEADERS+Tag_names
-        # some values are 0.0000, some are negative
-        M['Identity']= 1- M.de.replace('0.0000',0.00005).astype(float).apply(lambda d: max(d,0))
-    else:
+            Tags= M.iloc[:,len(MINIMAP_HEADERS):]
+            M= M.iloc[:,:len(MINIMAP_HEADERS)]
+            M.columns= MINIMAP_HEADERS
 
-        M.columns= MINIMAP_HEADERS
 
+            row_with_all_tags= Tags.loc[Tags.isnull().sum(1).idxmin()]
+
+            Tag_names= get_tag_names(row_with_all_tags)
+
+            M= pd.concat((M,pd.DataFrame(index=Tags.index,columns= Tag_names)),axis=1)
+
+
+            for i,row in  Tags.iterrows():
+                row.dropna(inplace=True)
+                M.loc[i,get_tag_names(row)]= get_tag_values(row)
+
+            M.loc[:,Tag_names]
+
+            # some values are 0.0000, some are negative
+            M['Identity']= 1- M.de.replace('0.0000',0.00005).astype(float).apply(lambda d: max(d,0))
+
+            # change dtype
+            #M.loc[:,Tag_names]= M.loc[:,Tag_names].astype(get_tag_dtypes(row_with_all_tags))
+
+        else:
+
+            raise IOError(f"I have less than the expected coumns in file {paf_file}")
+
+    except Exception as e:
+        raise IOError(f'Error during parsing paf file: {paf_file}')
 
     return M
 
@@ -47,6 +81,7 @@ def parse_paf_files(paf_files,genome_stats_file,output_file):
         for paf_file in paf_files:
 
             M= load_paf(paf_file)
+
 
             M.sort_values('Identity',inplace=True,ascending=False)
 
