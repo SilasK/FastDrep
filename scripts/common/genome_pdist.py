@@ -4,7 +4,8 @@ import pandas as pd
 import networkx as nx
 import warnings
 import os
-
+import scipy.spatial as sp
+import scipy.cluster.hierarchy as hc
 
 def simplify_index(index):
     "assumes single index are path of files, removes extesnion and dirname"
