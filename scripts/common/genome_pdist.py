@@ -111,7 +111,7 @@ def map_to_best_genome(G,quality_score):
     return Mapping
 
 
-def group_species_linkage(M,threshold = 0.95,fillna=0.8,plot=False,linkage_method='average',square=False):
+def group_species_linkage(M,threshold = 0.95,fillna=0.8,linkage_method='average',square=False):
 
     assert threshold>0.3, "threshold is an identity value"
 
@@ -135,13 +135,6 @@ def group_species_linkage(M,threshold = 0.95,fillna=0.8,plot=False,linkage_metho
     labels= pd.Series(hc.fcluster(linkage,cutoff,criterion='distance'), index= Dist.index)
 
 
-
-    if plot:
-        colors= labels.map(dict(zip(labels.unique(),sns.color_palette('Paired',n_colors= len(labels.unique())  )  )))
-
-
-        sns.clustermap(ID,row_linkage=linkage, col_linkage=linkage,
-                      row_colors=colors,col_colors=colors)
 
     return labels
 
