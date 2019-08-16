@@ -25,7 +25,7 @@ rule run_mummer:
         options="--mincluster 65 --maxgap 90 ",
         method= "mum"
     log:
-        "logs/mummer/{ref}-{query}.txt"
+        "logs/mummer/mummer/{ref}-{query}.txt"
     threads:
         1
     shell:

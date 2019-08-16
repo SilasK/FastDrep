@@ -13,7 +13,7 @@ rule Dstrain:
     input:
         lambda wc: expand("mummer/alignements/species_{i}.tsv",i=get_species_numbers(wc))
 
-rule cluster_species:
+rule run_mummer:
     input:
         genome_list="mash/clusters/{species}.txt",
         genome_folder= genome_folder,
@@ -25,9 +25,10 @@ rule cluster_species:
     conda:
         "../envs/mummer.yaml"
     resources:
-        time= lambda wc, input, threads: estimate_time_mummer(input,threads)
+        time= lambda wc, input, threads: estimate_time_mummer(input,threads),
+        mem=1
     log:
-        "logs/cluster_species/{species}.txt"
+        "logs/mummer/workflows/{species}.txt"
     params:
         path= os.path.dirname(workflow.snakefile)
     shell:
