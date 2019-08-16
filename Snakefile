@@ -22,11 +22,7 @@ include: "rules/pyani.smk"
 
 rule all:
     input:
-<<<<<<< HEAD
         # "ANI.tsv",
-=======
-        #"ANI.tsv",
->>>>>>> a567a64a3b70cf580fcd4adbabea348ca7fe204f
         #expand("pyani/{method}",method=['ANIm','ANIb']),
         "mash_dists.txt",
         "genome_stats.tsv"
