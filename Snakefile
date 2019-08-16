@@ -16,14 +16,17 @@ from common import genome_pdist as gd
 include: "rules/filter.smk"
 include: "rules/fastani.smk"
 include: "rules/mash.smk"
-include: "rules/minimap.smk"
 include: "rules/pyani.smk"
 
 
 
 rule all:
     input:
+<<<<<<< HEAD
         # "ANI.tsv",
+=======
+        #"ANI.tsv",
+>>>>>>> a567a64a3b70cf580fcd4adbabea348ca7fe204f
         #expand("pyani/{method}",method=['ANIm','ANIb']),
         "mash_dists.txt",
         "genome_stats.tsv"
