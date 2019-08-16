@@ -4,6 +4,7 @@ from itertools import combinations
 genomes= open(config['genome_list']).read().strip().replace('.fasta','').split()
 genome_folder= config['genome_folder']
 species= config['species']
+genome_stats= config['genome_stats']
 
 assert (path.isdir(genome_folder) & path.exists(genome_folder))
 
@@ -73,6 +74,28 @@ rule combine:
     input:
         ["mummer/delta/{}-{}.txt".format(*pair) for pair in combinations(genomes,2)]
     output:
-        f"mummer/alignements/{species}.tsv"
+        temp(f"mummer/alignements/{species}.txt")
     shell:
         "cat {input} > {output}"
+
+
+rule calculate_ANI:
+    input:
+        alignments=rules.combine.output[0],
+        genome_stats= genome_stats
+    output:
+        f"mummer/alignements/{species}.tsv"
+    run:
+        import pandas as pd
+
+        M= pd.read_csv(input.alignments,index_col=[0,1],header=None,sep='\t')
+        genome_stats= pd.read_csv(input.genome_stats,sep='\t',index_col=0)
+
+        M.columns=['Aln_length','Sim_errors']
+        M.index.names=['Genome1','Genome2']
+        M['ANI']= 1- M.Sim_errors / M.Aln_length
+        M['GenomeSize1']= genome_stats.loc[M.index.get_level_values(0),'Length'].values
+        M['GenomeSize2']= genome_stats.loc[M.index.get_level_values(1),'Length'].values
+        M['Coverage']= M.Aln_length / M[['GenomeSize1','GenomeSize2']].max(1)
+
+        M.to_csv(output[0],sep='\t')

@@ -68,6 +68,6 @@ checkpoint group_species:
 
 def get_species_numbers(wildcards):
 
-    dir=checkpoint.group_species.get().output.subsets_dir
+    dir=checkpoints.group_species.get().output.subsets_dir
 
     return glob_wildcards(f"{dir}/species_{{i}}.txt").i
