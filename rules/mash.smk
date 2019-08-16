@@ -38,23 +38,42 @@ rule mash_calculate_dist:
 
 
 
+localrules: group_species
+checkpoint group_species:
+    input:
+        mash_dists=rules.mash_calculate_dist.output[0],
+    output:
+        cluster_file="mash/clusters.tsv",
+        subsets_dir= directory("mash/clusters")
+    params:
+        threshold = 1- config['mash']['dist_treshold'],
+        fillna=0.8,
+        linkage_method='average',
+        square=False
+    run:
+        M= gd.load_mash(input.mash_dists)
+        labels= gd.group_species_linkage(M,**params)
+        labels.to_csv(output[0],sep='\t',header=False)
 
-# rule group_species_mash:
-#     input:
-#         mash_dists=
-#         quality=
-#     output:
-#
-#     params:
-#         threshold = 0.95,
-#         fillna=0.8,
-#         linkage_method='average',
-#         square=False
-#     run:
-#         M= gd.load_mash(input.mash_dists)
-#         labels= gd.group_species_linkage(M,**params)
-#
-#         Mapping_species= best_genome_from_table(labels,Q.QualityScore)
+        os.makedirs(output.subsets_dir)
+
+        for i in labels.unique():
+
+            genomes_of_cluster= labels.index[labels==i].values
+
+            with open(f"{output.subsets_dir}/species_{i}.txt","w") as f:
+
+                f.write(''.join([g+'.fasta\n' for g in genomes_of_cluster ]))
+
+
+def get_species_numbers(wildcards):
+
+    dir=checkpoint.group_species.get().output.subsets_dir
+
+    return glob_wildcards(f"{dir}/species_{{i}}.txt").i
+
+
+
 
 localrules: filter_mash
 checkpoint filter_mash:
