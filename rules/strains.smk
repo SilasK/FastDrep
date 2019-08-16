@@ -1,16 +1,19 @@
 
 
-def estimate_time_mummer(genome_list):
+def estimate_time_mummer(input,threads):
+    "retur time in minutes"
 
-    N= len(open(genome_list).read().split())
+    N= len(open(input.genome_list).read().split())
 
-    (N**2/2)*0.33 + N +10
+    time_per_mummer_call = 10/60
+
+    return int((N**2/2*time_per_mummer_call + N)/threads +10)
 
 rule Dstrain:
     input:
         lambda wc: expand("mummer/alignements/species_{i}.tsv",i=get_species_numbers(wc))
 
-rule run_mummer:
+rule cluster_species:
     input:
         genome_list="mash/clusters/{species}.txt",
         genome_folder= genome_folder,
@@ -21,7 +24,10 @@ rule run_mummer:
         8
     conda:
         "../envs/mummer.yaml"
-
+    resources:
+        time= lambda wc, input, threads: estimate_time_mummer(input,threads)
+    log:
+        "logs/cluster_species/{species}.txt"
     params:
         path= os.path.dirname(workflow.snakefile)
     shell:
@@ -30,4 +36,4 @@ rule run_mummer:
         " genome_folder='{input.genome_folder}' "
         " species={wildcards.species} "
         " genome_stats={input.genome_stats} "
-        "-j {threads} "
+        "-j {threads} --nolock 2> {log}"
