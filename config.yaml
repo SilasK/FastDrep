@@ -1,4 +1,4 @@
-threads: 4
+threads: 8
 mash:
    k: 21
    sketch_size: 1e4 # 1e3

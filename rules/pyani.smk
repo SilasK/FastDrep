@@ -4,7 +4,6 @@
 
 rule pyani:
     input:
-        filter_genome_folder,
         genome_folder
     output:
         directory("pyani/{method}") #{method}_percentage_identity.tab"

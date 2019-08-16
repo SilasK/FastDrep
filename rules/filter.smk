@@ -1,9 +1,9 @@
 
 rule calculate_stats:
     input:
-        genome_folder,
+        input_genome_folder,
     output:
-        "genome_stats.tsv"
+        "tables/inputgenome_stats.tsv"
     threads:
         10
     run:
@@ -25,14 +25,14 @@ rule calculate_stats:
         Stats.to_csv(output[0],sep='\t')
 
 if config.get('skip_filter',False):
-    filter_genome_folder= genome_folder
+    filter_genome_folder= input_genome_folder
 else:
     filter_genome_folder='filtered_bins'
 
     localrules: filter_genomes
     rule filter_genomes:
         input:
-            dir=os.path.abspath(genome_folder),
+            dir=os.path.abspath(input_genome_folder),
             quality=config['genome_qualities'],
             genome_stats= rules.calculate_stats.output[0]
         output:
@@ -82,3 +82,57 @@ else:
             for f in filtered.values:
                 os.symlink(os.path.join(input.dir,f),
                            os.path.join(output[0],f))
+
+
+
+def gen_names_for_range(N,prefix='',start=1):
+    """generates a range of IDS with leading zeros so sorting will be ok"""
+    n_leading_zeros= len(str(N))
+    format_int=prefix+'{:0'+str(n_leading_zeros)+'d}'
+    return [format_int.format(i) for i in range(start,N+start)]
+
+
+genome_folder='genomes'
+
+localrules: rename_genomes
+rule rename_genomes:
+    input:
+        genome_folder= input_genome_folder,
+        stats="tables/inputgenome_stats.tsv",
+        quality=config['genome_qualities']
+    output:
+        genome_folder= directory(genome_folder),
+        mapping= "tables/renamed_genomes.tsv",
+        stats="tables/genome_stats.tsv",
+        quality="tables/Genome_quality.tsv"
+    run:
+
+        import pandas as pd
+        import shutil
+
+        Mapping= pd.DataFrame()
+
+        Mapping['Original_fasta'] = os.listdir(input.genome_folder)
+        Mapping.index = Mapping.Original_fasta.apply(lambda f: os.path.splitext(f)[0])
+        Mapping.sort_index(inplace=True)
+
+        Mapping['Genome']= gen_names_for_range(Mapping.shape[0],"MAG")
+        Mapping.to_csv(output.mapping,sep='\t')
+
+        #Rename stats
+        Stats= pd.read_csv(input.stats, sep='\t',index_col=0)
+        Stats= Stats.rename(index=Mapping.Genome)
+        Stats.to_csv(output.stats,sep='\t')
+
+        Q= pd.read_csv(input.quality, sep='\t',index_col=0)
+        Q= Stats.rename(index=Mapping.Genome)
+        Q.to_csv(output.quality,sep='\t')
+
+
+        os.makedirs(output.genome_folder)
+
+        for _,row in Mapping.iterrows():
+
+            shutil.copy(os.path.join(input.genome_folder,row.Original_fasta),
+                        os.path.join(output.genome_folder,row.Genome+'.fasta')
+                        )

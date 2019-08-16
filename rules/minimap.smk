@@ -43,9 +43,9 @@ rule minimap:
 
 rule many_minimap:
     input:
-        genome_folder=filter_genome_folder,
+        genome_folder=genome_folder,
         alignment_list='minimap/alignment_lists/subset_{n}.txt',
-        genome_stats= "genome_stats.tsv"
+        genome_stats= "tables/genome_stats.tsv"
     output:
         alignments_stats="minimap/alignments_stats/subset_{n}.tsv",
     log:

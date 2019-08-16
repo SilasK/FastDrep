@@ -4,7 +4,7 @@ import os
 localrules: gen_genome_lists,combine_fastANI
 checkpoint gen_genome_lists:
     input:
-        filter_genome_folder
+        genome_folder
     output:
         clusters=directory("clusters/fastani")
     params:
@@ -33,8 +33,7 @@ rule fastANI:
     input:
         list1= "clusters/fastani/Cluster{i}.txt",
         list2= "clusters/fastani/Cluster{j}.txt",
-        genomes= filter_genome_folder,
-        all_Genomes= genome_folder
+        genomes= genome_folder
     output:
         "clusters/fastani/ANIcluster{i}-{j}.txt",
     resources:

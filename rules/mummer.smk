@@ -11,7 +11,7 @@ assert (path.isdir(genome_folder) & path.exists(genome_folder))
 
 rule all:
     input:
-        f"mummer/alignements/{species}.tsv"
+        f"mummer/ANI/{species}.tsv"
 
 
 rule run_mummer:
@@ -74,7 +74,7 @@ rule combine:
     input:
         ["mummer/delta/{}-{}.txt".format(*pair) for pair in combinations(genomes,2)]
     output:
-        temp(f"mummer/alignements/{species}.txt")
+        temp(f"mummer/ANI/{species}.txt")
     shell:
         "cat {input} > {output}"
 
@@ -84,7 +84,7 @@ rule calculate_ANI:
         alignments=rules.combine.output[0],
         genome_stats= genome_stats
     output:
-        f"mummer/alignements/{species}.tsv"
+        f"mummer/ANI/{species}.tsv"
     run:
         import pandas as pd
 

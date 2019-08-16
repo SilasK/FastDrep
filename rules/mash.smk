@@ -2,10 +2,9 @@
 
 rule mash_sketch_genome:
     input:
-        filter_genome_folder,
         genome_folder
     output:
-        "genomes.msh"
+        "mash/genomes.msh"
     params:
         k= config['mash']['k'],
         s= config['mash']['sketch_size'],
@@ -24,7 +23,7 @@ rule mash_calculate_dist:
     input:
         genomes=rules.mash_sketch_genome.output
     output:
-        "mash_dists.txt"
+        "mash/dists.txt"
     params:
         d= config['mash']['max_dist']
     threads:
@@ -38,13 +37,12 @@ rule mash_calculate_dist:
 
 
 
-localrules: group_species
-checkpoint group_species:
+localrules: cluster_mash
+rule cluster_mash:
     input:
         mash_dists=rules.mash_calculate_dist.output[0],
     output:
         cluster_file="mash/clusters.tsv",
-        subsets_dir= directory("mash/clusters")
     params:
         threshold = 1- config['mash']['dist_treshold'],
         fillna=0.8,
@@ -53,21 +51,11 @@ checkpoint group_species:
     run:
         M= gd.load_mash(input.mash_dists)
         labels= gd.group_species_linkage(M,**params)
+
+        if min(labels)==0: labels+=1
+        n_leading_zeros= len(str(max(labels)))
+        format_int='Species{:0'+str(n_leading_zeros)+'d}'
+
+        labels=labels.apply(format_int.format)
+
         labels.to_csv(output[0],sep='\t',header=False)
-
-        os.makedirs(output.subsets_dir)
-
-        for i in labels.unique():
-
-            genomes_of_cluster= labels.index[labels==i].values
-
-            with open(f"{output.subsets_dir}/species_{i}.txt","w") as f:
-
-                f.write(''.join([g+'.fasta\n' for g in genomes_of_cluster ]))
-
-
-def get_species_numbers(wildcards):
-
-    dir=checkpoints.group_species.get().output.subsets_dir
-
-    return glob_wildcards(f"{dir}/species_{{i}}.txt").i
