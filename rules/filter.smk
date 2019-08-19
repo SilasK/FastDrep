@@ -97,7 +97,7 @@ genome_folder='genomes'
 localrules: rename_genomes
 rule rename_genomes:
     input:
-        genome_folder= input_genome_folder,
+        genome_folder= filter_genome_folder,
         stats="tables/inputgenome_stats.tsv",
         quality=config['genome_qualities']
     output:
@@ -125,7 +125,7 @@ rule rename_genomes:
         Stats.to_csv(output.stats,sep='\t')
 
         Q= pd.read_csv(input.quality, sep='\t',index_col=0)
-        Q= Stats.rename(index=Mapping.Genome)
+        Q= Q.rename(index=Mapping.Genome)
         Q.to_csv(output.quality,sep='\t')
 
 
