@@ -92,7 +92,7 @@ def gen_names_for_range(N,prefix='',start=1):
     return [format_int.format(i) for i in range(start,N+start)]
 
 
-genome_folder='genomes'
+genome_folder='mags'
 
 localrules: rename_genomes
 rule rename_genomes:
@@ -109,11 +109,12 @@ rule rename_genomes:
 
         import pandas as pd
         import shutil
+        from glob import glob
 
         Mapping= pd.DataFrame()
 
-        Mapping['Original_fasta'] = os.listdir(input.genome_folder)
-        Mapping.index = Mapping.Original_fasta.apply(lambda f: os.path.splitext(f)[0])
+        Mapping['Original_fasta'] = glob(os.path.join(input.genome_folder,"*.f*"))
+        Mapping.index = gd.simplify_index(Mapping.Original_fasta)
         Mapping.sort_index(inplace=True)
 
         Mapping['Genome']= gen_names_for_range(Mapping.shape[0],"MAG")
@@ -133,6 +134,6 @@ rule rename_genomes:
 
         for _,row in Mapping.iterrows():
 
-            shutil.copy(os.path.join(input.genome_folder,row.Original_fasta),
+            shutil.copy(row.Original_fasta,
                         os.path.join(output.genome_folder,row.Genome+'.fasta')
                         )
