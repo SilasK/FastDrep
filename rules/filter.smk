@@ -92,12 +92,12 @@ def gen_names_for_range(N,prefix='',start=1):
     return [format_int.format(i) for i in range(start,N+start)]
 
 
-genome_folder='genomes'
+genome_folder='mags'
 
 localrules: rename_genomes, decompress_genomes
 rule rename_genomes:
     input:
-        genome_folder= input_genome_folder,
+        genome_folder= filter_genome_folder,
         stats="tables/inputgenome_stats.tsv",
         quality=config['genome_qualities']
     output:
@@ -109,11 +109,12 @@ rule rename_genomes:
 
         import pandas as pd
         import shutil
+        from glob import glob
 
         Mapping= pd.DataFrame()
 
-        Mapping['Original_fasta'] = os.listdir(input.genome_folder)
-        Mapping.index = Mapping.Original_fasta.apply(lambda f: os.path.splitext(f)[0])
+        Mapping['Original_fasta'] = glob(os.path.join(input.genome_folder,"*.f*"))
+        Mapping.index = gd.simplify_index(Mapping.Original_fasta)
         Mapping.sort_index(inplace=True)
 
         Mapping['Genome']= gen_names_for_range(Mapping.shape[0],"MAG")
@@ -121,11 +122,11 @@ rule rename_genomes:
 
         #Rename stats
         Stats= pd.read_csv(input.stats, sep='\t',index_col=0)
-        Stats= Stats.rename(index=Mapping.Genome)
+        Stats= Stats.rename(index=Mapping.Genome).loc[Mapping.Genome]
         Stats.to_csv(output.stats,sep='\t')
 
         Q= pd.read_csv(input.quality, sep='\t',index_col=0)
-        Q= Stats.rename(index=Mapping.Genome)
+        Q= Q.rename(index=Mapping.Genome).loc[Mapping.Genome]
         Q.to_csv(output.quality,sep='\t')
 
 
@@ -133,7 +134,7 @@ rule rename_genomes:
 
         for _,row in Mapping.iterrows():
 
-            shutil.copy(os.path.join(input.genome_folder,row.Original_fasta),
+            shutil.copy(row.Original_fasta,
                         os.path.join(output.genome_folder,row.Genome+'.fasta')
                         )
 

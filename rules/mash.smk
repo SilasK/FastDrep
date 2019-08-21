@@ -46,7 +46,7 @@ rule cluster_mash:
     params:
         threshold = 1- config['mash']['dist_treshold'],
         fillna=0.8,
-        linkage_method='average',
+        linkage_method='ward',
         square=False
     run:
         M= gd.load_mash(input.mash_dists)

@@ -16,10 +16,11 @@ checkpoint species_subsets:
         for species in labels.unique():
 
             genomes_of_cluster= labels.index[labels==species].values
+            if len(genomes_of_cluster)>1:
 
-            with open(f"{output.subsets_dir}/{species}.txt","w") as f:
+                with open(f"{output.subsets_dir}/{species}.txt","w") as f:
 
-                f.write(''.join([g+'.fasta\n' for g in genomes_of_cluster ]))
+                    f.write(''.join([g+'.fasta\n' for g in genomes_of_cluster ]))
 
 
 def get_species(wildcards):
@@ -36,7 +37,7 @@ def estimate_time_mummer(input,threads):
 
     time_per_mummer_call = 10/60
 
-    return int(N**2/2*time_per_mummer_call + N/2)//threads
+    return int(N**2/2*time_per_mummer_call + N/2)//threads + 5
 
 localrules: get_deltadir,decompress_delta,Dstrain
 rule get_deltadir:
@@ -91,4 +92,5 @@ rule run_mummer:
         " genome_folder='{input.genome_folder}' "
         " species={wildcards.species} "
         " genome_stats={input.genome_stats} "
+        " --rerun-incomplete "
         "-j {threads} --nolock 2> {log}"

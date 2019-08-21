@@ -111,7 +111,7 @@ def map_to_best_genome(G,quality_score):
     return Mapping
 
 
-def group_species_linkage(M,threshold = 0.95,fillna=0.8,linkage_method='average',square=False):
+def group_species_linkage(M,threshold = 0.95,fillna=0.8,linkage_method='ward',square=False):
 
     assert threshold>0.3, "threshold is an identity value"
 
@@ -173,7 +173,7 @@ def extarnilize_index(indexes,genomefolder,extension='.fasta'):
 
 
 
-def clustermap(DistanceMatrix,linkage_method='average',**kws):
+def clustermap(DistanceMatrix,linkage_method='ward',**kws):
     import seaborn as sns
     import scipy.spatial as sp, scipy.cluster.hierarchy as hc
 
