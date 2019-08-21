@@ -122,11 +122,11 @@ rule rename_genomes:
 
         #Rename stats
         Stats= pd.read_csv(input.stats, sep='\t',index_col=0)
-        Stats= Stats.rename(index=Mapping.Genome)
+        Stats= Stats.rename(index=Mapping.Genome).loc[Mapping.Genome]
         Stats.to_csv(output.stats,sep='\t')
 
         Q= pd.read_csv(input.quality, sep='\t',index_col=0)
-        Q= Q.rename(index=Mapping.Genome)
+        Q= Q.rename(index=Mapping.Genome).loc[Mapping.Genome]
         Q.to_csv(output.quality,sep='\t')
 
 

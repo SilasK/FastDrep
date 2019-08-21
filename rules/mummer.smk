@@ -76,8 +76,9 @@ rule combine:
     output:
         temp(f"mummer/ANI/{species}.txt")
     shell:
-        "cat {input} > {output}"
-
+        "for f in {input}; "
+        " do cat $f >> {output} ;"
+        "done"
 
 rule calculate_ANI:
     input:
