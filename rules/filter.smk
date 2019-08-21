@@ -94,7 +94,7 @@ def gen_names_for_range(N,prefix='',start=1):
 
 genome_folder='genomes'
 
-localrules: rename_genomes
+localrules: rename_genomes, decompress_genomes
 rule rename_genomes:
     input:
         genome_folder= input_genome_folder,
@@ -136,3 +136,13 @@ rule rename_genomes:
             shutil.copy(os.path.join(input.genome_folder,row.Original_fasta),
                         os.path.join(output.genome_folder,row.Genome+'.fasta')
                         )
+
+
+rule decompress_genomes:
+    input:
+        "genomes.tar.gz"
+    output:
+        directory("genomes")
+    shell:
+        "tar -xzf {input}"
+ruleorder: decompress_genomes>rename_genomes
