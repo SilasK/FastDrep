@@ -45,12 +45,11 @@ else:
             import pandas as pd
 
             genome_stats= pd.read_csv(input.genome_stats,index_col=0,sep='\t')
-            Q= pd.read_csv(input.quality,sep='\t',index_col=0)
+            Q= gd.load_quality(input.quality)
             assert not Q.index.duplicated().any(), f"duplicated indexes in {input.quality}"
 
 
 
-            Q.index= gd.simplify_index(Q.index)
 
             files_in_folder= pd.Series(os.listdir(input.dir))
 
@@ -125,7 +124,7 @@ rule rename_genomes:
         Stats= Stats.rename(index=Mapping.Genome).loc[Mapping.Genome]
         Stats.to_csv(output.stats,sep='\t')
 
-        Q= pd.read_csv(input.quality, sep='\t',index_col=0)
+        Q= gd.load_quality(input.quality)
         Q= Q.rename(index=Mapping.Genome).loc[Mapping.Genome]
         Q.to_csv(output.quality,sep='\t')
 

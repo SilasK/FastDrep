@@ -139,7 +139,7 @@ def group_species_linkage(M,threshold = 0.95,fillna=0.8,linkage_method='ward',sq
     return labels
 
 def load_quality(checkm_file):
-    Q= pd.read_table(checkm_file, index_col=0)
+    Q= pd.read_csv(checkm_file, index_col=0,sep='\t')
     Q= Q.rename(columns={'strain heterogeneity':'strain_heterogeneity'})
     Q.index= Q.index.str.replace('.fasta','')
 
