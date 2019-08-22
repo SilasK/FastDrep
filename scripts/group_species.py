@@ -55,7 +55,8 @@ if __name__=='__main__':
     M= gd.load_mash(snakemake.input.dists)
 
     ID= M.Identity.unstack()
-    ID= ID.loc[ID.index,ID.index]
+    all_index=ID.index.union(ID.columns)
+    ID= ID.reindex(index=all_index,columns=all_index).fillna(0)
     Dist= 1-ID.fillna(0.8)
 
 

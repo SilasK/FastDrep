@@ -144,7 +144,8 @@ def group_species_linkage(M,threshold = 0.95,fillna=0.8,linkage_method='average'
 
 
     ID= M.Identity.unstack()
-    ID= ID.loc[ID.index,ID.index]
+    all_index=ID.index.union(ID.columns)
+    ID= ID.reindex(index=all_index,columns=all_index)
 
     #take smaler of both comparisons (fastANI)
     # ID= ID+(ID.T-ID).applymap(lambda s: min(s,0))
