@@ -75,10 +75,12 @@ rule combine:
         ["mummer/delta/{}-{}.txt".format(*pair) for pair in combinations(genomes,2)]
     output:
         temp(f"mummer/ANI/{species}.txt")
-    shell:
-        "for f in {input}; "
-        " do cat $f >> {output} ;"
-        "done"
+    run:
+        with open(output, "w") as fout:
+            for f in input:
+                with open(f,'r') as fi:
+                    fout.write(fi.read())
+
 
 rule calculate_ANI:
     input:
