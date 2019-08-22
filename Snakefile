@@ -25,5 +25,6 @@ rule all:
     input:
         # "ANI.tsv",
         #expand("pyani/{method}",method=['ANIm','ANIb']),
+        "representatives/species",
         "mash/dists.txt",
         "tables/genome_stats.tsv"
