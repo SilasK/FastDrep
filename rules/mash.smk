@@ -40,22 +40,9 @@ rule mash_calculate_dist:
 localrules: cluster_mash
 rule cluster_mash:
     input:
-        mash_dists=rules.mash_calculate_dist.output[0],
+        dists=rules.mash_calculate_dist.output[0],
     output:
-        cluster_file="mash/clusters.tsv",
-    params:
-        threshold = 1- config['mash']['dist_treshold'],
-        fillna=0.8,
-        linkage_method='ward',
-        square=False
-    run:
-        M= gd.load_mash(input.mash_dists)
-        labels= gd.group_species_linkage(M,**params)
-
-        if min(labels)==0: labels+=1
-        n_leading_zeros= len(str(max(labels)))
-        format_int='Species{:0'+str(n_leading_zeros)+'d}'
-
-        labels=labels.apply(format_int.format)
-
-        labels.to_csv(output[0],sep='\t',header=False)
+        cluster_file="tables/mag2species.tsv",
+        scores="tables/evaluation_species_clustering.tsv"
+    script:
+        "../scripts/group_species.py"

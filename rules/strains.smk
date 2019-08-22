@@ -3,12 +3,12 @@
 localrules: species_subsets
 checkpoint species_subsets:
     input:
-        cluster_file="mash/clusters.tsv",
+        cluster_file=rules.cluster_mash.output.cluster_file,
     output:
         subsets_dir= directory("mummer/subsets")
     run:
         import pandas as pd
-        labels= pd.read_csv(input[0],sep='\t',header=None,squeeze=True,index_col=0)
+        labels= pd.read_csv(input[0],sep='\t',squeeze=True,index_col=0)
 
 
         os.makedirs(output.subsets_dir)

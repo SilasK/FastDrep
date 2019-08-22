@@ -6,6 +6,8 @@ import warnings
 import os
 import scipy.spatial as sp
 import scipy.cluster.hierarchy as hc
+from sklearn.metrics  import silhouette_score
+import numpy as np
 
 def simplify_index(index):
     "assumes single index are path of files, removes extesnion and dirname"
@@ -79,36 +81,59 @@ def to_graph(F,attributes=None,**kws):
     return G
 
 
+def evaluate_clusters(labels,Dist):
+
+        try:
+            Silhouette_score= silhouette_score(Dist, metric='precomputed', labels=labels)
+            N_clusters = np.unique(labels).shape[0]
+        except ValueError:
+            Silhouette_score, N_clusters = np.nan, np.nan
+
+        return Silhouette_score, N_clusters
+
+def evaluate_clusters_range(N_range,Dist,linkage_method='average',criterion='maxclust'):
+
+    linkage = hc.linkage(sp.distance.squareform(Dist), method=linkage_method)
+
+    def get_clusters(N):
+        labels= hc.fcluster(linkage,N,criterion=criterion)
+        return evaluate_clusters(labels,Dist)
+
+    Scores= pd.DataFrame([get_clusters(t) for t in N_range],index= N_range, columns= ['Silhouette_score','N_clusters'])
+
+    return Scores
 
 
-def get_connected_components(Graph):
+def evaluate_clusters_tresholds(tresholds,Dist,linkage_method='average',criterion='distance'):
 
-    try:
-        next(Graph.selfloop_edges())
-    except StopIteration:
-        warings.warn("The graph does't contain self loops, cluster of size 1 will not be retreaved")
+    linkage = hc.linkage(sp.distance.squareform(Dist), method=linkage_method)
 
+    def get_clusters(t):
+        labels= hc.fcluster(linkage,1-t,criterion=criterion)
+        return evaluate_clusters(labels,Dist)
 
-    return list(nx.connected_components(Graph))
+    Scores= pd.DataFrame([get_clusters(t) for t in tresholds],index= tresholds, columns= ['Silhouette_score','N_clusters'])
 
-
-def map_to_best_genome(G,quality_score):
-
-
-    CC= list(nx.connected_components(G))
-
-    Mapping=pd.Series(index=quality_score.index)
-
-    for c in CC:
-        representative= quality_score.loc[c].idxmax()
-        Mapping.loc[c]=representative
-
-    single_genomes=[n for n,d in G.degree() if d==0 ]
-    if len(single_genomes)>0:
-        Mapping.loc[single_genomes]=single_genomes
+    return Scores
 
 
-    return Mapping
+def plot_scores(Scores,xlabel='Treshold'):
+
+    import matplotlib.pylab as plt
+
+    f,axe= plt.subplots(2,1,sharex=True,figsize=(6,5))
+    Scores.Silhouette_score.plot(marker='.',ax=axe[0])
+
+    axe[0].set_ylabel('Silhouette score')
+    Scores.N_clusters.plot(marker='.',ax=axe[1])
+    axe[1].set_ylabel('N clusters')
+
+    axe[1].set_xlabel(xlabel)
+
+
+    return f,axe
+
+
 
 
 def group_species_linkage(M,threshold = 0.95,fillna=0.8,linkage_method='ward',square=False):
@@ -156,20 +181,6 @@ def best_genome_from_table(Grouping,quality_score):
 
     return Mapping
 
-
-def internalize_index(index, genomefolder,extension='.fasta'):
-    """adapts indexes of genomes to represent the full path to genome, this is for internal use
-    """
-
-
-    if extension in index:
-        raise Exception(f"Index has already an extension prpbbly, you don't want to internalize_indexes. {i}")
-
-    return os.path.join(genomefolder,index+extension)
-
-def extarnilize_index(indexes,genomefolder,extension='.fasta'):
-
-    return index.replace(extension,'').replace(genomefolder,'')
 
 
 
