@@ -11,5 +11,6 @@ fastani:
 species_treshold: 'auto' # ]0.8-1[ or 'auto' / auto detects best treshold in range [0.9,0.95]
 genome_folder: 'all_bins'
 genome_qualities: 'Checkm_quality_allbins.tsv'
+quality_score: 'completeness-5*contamination-0.5*strain_heterogeneity'
 qualityfilter_criteria: '(completeness-5*contamination-0.5*strain_heterogeneity)>=50'
 filter_criteria: "N50>5000"

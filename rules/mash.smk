@@ -41,11 +41,31 @@ localrules: cluster_mash
 rule cluster_mash:
     input:
         dists=rules.mash_calculate_dist.output[0],
+        quality ="tables/Genome_quality.tsv",
     output:
         cluster_file="tables/mag2species.tsv",
         scores="tables/evaluation_species_clustering.tsv"
     params:
         treshold=config['species_treshold'],
-        linkage_method=config.get('linkage_method','average')
+        linkage_method=config.get('linkage_method','average'),
     script:
         "../scripts/group_species.py"
+
+rule get_representatives:
+    input:
+        dir= genome_folder,
+        cluster_file= rules.cluster_mash.output.cluster_file
+    output:
+        dir= directory("representatives/species"),
+    run:
+
+        import pandas as pd
+        df= pd.read_csv(input.cluster_file,sep='\t')
+
+        output_dir = output.dir
+        os.makedirs(output_dir)
+        input_dir= os.path.relpath(input.dir,start=output_dir)
+        for genome in df.Representative_Species.unique():
+            os.symlink(os.path.join(input_dir,genome+'.fasta'),
+                       os.path.join(output_dir,genome+'.fasta')
+                   )

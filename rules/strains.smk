@@ -8,7 +8,7 @@ checkpoint species_subsets:
         subsets_dir= directory("mummer/subsets")
     run:
         import pandas as pd
-        labels= pd.read_csv(input[0],sep='\t',squeeze=True,index_col=0)
+        labels= pd.read_csv(input[0],sep='\t',index_col=0).Species
 
 
         os.makedirs(output.subsets_dir)
