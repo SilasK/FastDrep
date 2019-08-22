@@ -37,7 +37,7 @@ rule mash_calculate_dist:
 
 
 
-localrules: cluster_mash
+localrules: cluster_mash,get_representatives
 rule cluster_mash:
     input:
         dists=rules.mash_calculate_dist.output[0],

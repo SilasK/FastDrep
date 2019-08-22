@@ -48,6 +48,7 @@ else:
             Q= gd.load_quality(input.quality)
             assert not Q.index.duplicated().any(), f"duplicated indexes in {input.quality}"
 
+            Q['quality_score']= Q.eval(config['quality_score'])
 
 
 
