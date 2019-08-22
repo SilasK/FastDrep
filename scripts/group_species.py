@@ -27,7 +27,7 @@ def automatic_cluster_species(Dist,seed_tresholds= [0.9,0.95],linkage_method='av
 
     assert ~np.isnan(N_range).any(), "N range is not defined"
 
-    Scores= gd.evaluate_clusters_range(np.arange(min(N_range),max(N_range)+1),Dist)
+    Scores= gd.evaluate_clusters_range(np.arange(min(N_range),max(N_range)+1),Dist,linkage_method=linkage_method)
 
 
     if N_range[0]==N_range[1]:
@@ -49,6 +49,10 @@ def automatic_cluster_species(Dist,seed_tresholds= [0.9,0.95],linkage_method='av
 
 if __name__=='__main__':
 
+    linkage_method= snakemake.params.linkage_method
+    treshold = snakemake.params.treshold
+
+
     M= gd.load_mash(snakemake.input.dists)
 
     ID= M.Identity.unstack()
@@ -56,7 +60,15 @@ if __name__=='__main__':
     Dist= 1-ID.fillna(0.8)
 
 
-    Scores,labels= automatic_cluster_species(Dist)
+
+    if treshold=='auto':
+        Scores,labels= automatic_cluster_species(Dist,linkage_method=linkage_method)
+    else:
+        assert (treshold>0.8)&(treshold<1), "treshold should be between 0.8 and 1 or 'auto', treshold was {treshold}"
+        linkage = hc.linkage(sp.distance.squareform(Dist), method=linkage_method)
+        labels = hc.fcluster(linkage,(1-treshold),criterion='distance')
+        Scores= gd.evaluate_clusters_tresholds([treshold],Dist,linkage_method=linkage_method)
+
 
     labels= pd.Series(labels,name='Species')
     labels.index.name='genome'

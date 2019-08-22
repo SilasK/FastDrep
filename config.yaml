@@ -3,12 +3,12 @@ mash:
    k: 21
    sketch_size: 1e4 # 1e3
    max_dist: 0.2
-   dist_treshold: 0.1
 fastani:
   k: 16
   fragLen: 3000
   minFrag: 50
   subset_size: 100
+species_treshold: 'auto' # ]0.8-1[ or 'auto' / auto detects best treshold in range [0.9,0.95]
 genome_folder: 'all_bins'
 genome_qualities: 'Checkm_quality_allbins.tsv'
 qualityfilter_criteria: '(completeness-5*contamination-0.5*strain_heterogeneity)>=50'
