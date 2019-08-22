@@ -76,7 +76,7 @@ rule combine:
     output:
         temp(f"mummer/ANI/{species}.txt")
     run:
-        with open(output, "w") as fout:
+        with open(output[0], "w") as fout:
             for f in input:
                 with open(f,'r') as fi:
                     fout.write(fi.read())
