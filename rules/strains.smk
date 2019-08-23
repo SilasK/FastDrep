@@ -96,7 +96,7 @@ rule run_mummer:
         "../envs/mummer.yaml"
     resources:
         time= lambda wc, input, threads: estimate_time_mummer(input,threads),
-        mem=1
+        mem= 5
     log:
         "logs/mummer/workflows/{species}.txt"
     params:
