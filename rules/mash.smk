@@ -59,6 +59,11 @@ def get_species(wildcards):
     df= pd.read_csv(input[0],sep='\t',index_col=0)
     return list(df.Species.unique())
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 0451e2de36dfbfdef405da44663de6bb1567b1cd
 
 rule get_representatives:
     input:

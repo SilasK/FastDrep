@@ -12,7 +12,7 @@ rule Dstrain:
 
 
 localrules: species_subsets
-rule species_subsets:
+checkpoint species_subsets:
     input:
         cluster_file=rules.cluster_mash.output.cluster_file,
     output:
@@ -32,6 +32,19 @@ rule species_subsets:
                 with open(f"{output.subsets_dir}/{species}.txt","w") as f:
 
                     f.write(''.join([g+'.fasta\n' for g in genomes_of_cluster ]))
+
+
+def get_species_for_sub_clustering(wildcards):
+    import pandas as pd
+    subset_dir= checkpoints.subsets_dir.get() # subsetdir must be present
+    cluster_file=checkpoints.cluster_mash.get().output.cluster_file
+
+    df= pd.read_csv(cluster_file,sep='\t',index_col=0)
+
+    Nspecies= df.groupby('Species').size()
+
+
+    return list(Nspecies.index[Nspecies>1])
 
 
 
