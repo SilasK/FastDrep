@@ -103,7 +103,7 @@ rule run_mummer:
         path= os.path.dirname(workflow.snakefile)
     shell:
         "snakemake -s {params.path}/rules/mummer.smk "
-        "--config genome_list='{input.genome_list}/{wildcards.species}.txt' "
+        "--config genome_list='{input.genome_list_dir}/{wildcards.species}.txt' "
         " genome_folder='{input.genome_folder}' "
         " species={wildcards.species} "
         " genome_stats={input.genome_stats} "
