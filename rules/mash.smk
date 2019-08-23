@@ -38,7 +38,7 @@ rule mash_calculate_dist:
 
 
 localrules: cluster_mash,get_representatives
-rule cluster_mash:
+checkpoint cluster_mash:
     input:
         dists=rules.mash_calculate_dist.output[0],
         quality ="tables/Genome_quality.tsv",
@@ -50,6 +50,15 @@ rule cluster_mash:
         linkage_method=config.get('linkage_method','average'),
     script:
         "../scripts/group_species.py"
+
+
+def get_species(wildcards):
+    import pandas as pd
+    dir=checkpoints.cluster_mash.get().output.cluster_file
+
+    df= pd.read_csv(input[0],sep='\t',index_col=0)
+    return list(df.Species.unique())
+
 
 rule get_representatives:
     input:

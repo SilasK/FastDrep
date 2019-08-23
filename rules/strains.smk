@@ -11,13 +11,13 @@ rule Dstrain:
         " tar -czf {input.delta_dir}.tar.gz {input.delta_dir} ;"
         "rm -rf {input.subsets_dir} {input.delta_dir} {input.ani_dir}"
 
-        
+
 localrules: species_subsets
-checkpoint species_subsets:
+rule species_subsets:
     input:
         cluster_file=rules.cluster_mash.output.cluster_file,
     output:
-        subsets_dir= directory("mummer/subsets")
+        subsets_dir= temp(directory("mummer/subsets"))
     run:
         import pandas as pd
         labels= pd.read_csv(input[0],sep='\t',index_col=0).Species
@@ -34,12 +34,6 @@ checkpoint species_subsets:
 
                     f.write(''.join([g+'.fasta\n' for g in genomes_of_cluster ]))
 
-
-def get_species(wildcards):
-
-    dir=checkpoints.species_subsets.get().output.subsets_dir
-
-    return glob_wildcards(f"{dir}/{{species}}.txt").species
 
 
 def estimate_time_mummer(input,threads):
