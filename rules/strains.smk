@@ -63,7 +63,7 @@ ruleorder: decompress_delta>get_deltadir
 
 rule merge_mummer_ani:
     input:
-        lambda wc: expand("mummer/ANI/{species}.tsv",species=get_species(wc))
+        lambda wc: expand("mummer/ANI/{species}.tsv",species=get_species_for_sub_clustering(wc))
     output:
         "tables/dist_strains.tsv"
     run:
