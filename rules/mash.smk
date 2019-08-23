@@ -59,16 +59,6 @@ def get_species(wildcards):
     df= pd.read_csv(cluster_file,sep='\t',index_col=0)
     return list(df.Species.unique())
 
-def get_species_for_sub_clustering(wildcards):
-    import pandas as pd
-    cluster_file=checkpoints.cluster_mash.get().output.cluster_file
-
-    df= pd.read_csv(cluster_file,sep='\t',index_col=0)
-
-    Nspecies= df.groupby('Species').size()
-
-
-    return list(Nspecies.index[Nspecies>1])
 
 
 
