@@ -1,5 +1,17 @@
 
+rule Dstrain:
+    input:
+        ANI="tables/dist_strains.tsv",
+        ani_dir='mummer/ANI',
+        subsets_dir="mummer/subsets",
+        delta_dir="mummer/delta"
+    output:
+        "mummer/delta.tar.gz"
+    shell:
+        " tar -czf {input.delta_dir}.tar.gz {input.delta_dir} ;"
+        "rm -rf {input.subsets_dir} {input.delta_dir} {input.ani_dir}"
 
+        
 localrules: species_subsets
 checkpoint species_subsets:
     input:
@@ -56,16 +68,26 @@ rule decompress_delta:
 ruleorder: decompress_delta>get_deltadir
 
 
-rule Dstrain:
+rule merge_mummer_ani:
     input:
-        ANI=lambda wc: expand("mummer/ANI/{species}.tsv",species=get_species(wc)),
-        subsets_dir="mummer/subsets",
-        delta_dir="mummer/delta"
+        lambda wc: expand("mummer/ANI/{species}.tsv",species=get_species(wc))
     output:
-        "mummer/delta.tar.gz"
-    shell:
-        " tar -czf {input.delta_dir}.tar.gz {input.delta_dir} ;"
-        "rm -rf {input.subsets_dir} {input.delta_dir}"
+        "tables/dist_strains.tsv"
+    run:
+        import pandas as pd
+        Mummer={}
+        for file in input:
+            Mummer[io.simplify_path(file)]= pd.read_csv(file,index_col=[0,1],sep='\t')
+
+        M= pd.concat(Mummer,axis=0)
+        M['Species']=M.index.get_level_values(0)
+        M.index= M.index.droplevel(0)
+        M.to_csv(output[0],sep='\t')
+
+        #sns.jointplot('ANI','Coverage',data=M.query('ANI>0.98'),kind='hex',gridsize=100,vmax=200)
+
+
+
 
 rule run_mummer:
     input:
@@ -74,7 +96,7 @@ rule run_mummer:
         genome_stats="tables/genome_stats.tsv",
         delta_dir="mummer/delta"
     output:
-        "mummer/ANI/{species}.tsv"
+        temp("mummer/ANI/{species}.tsv")
     threads:
         config['threads']
     conda:

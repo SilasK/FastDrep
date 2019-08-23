@@ -9,6 +9,7 @@ input_genome_folder=config['genome_folder']
 
 sys.path.append(os.path.join(os.path.dirname(workflow.snakefile),'scripts'))
 from common import genome_pdist as gd
+from common import io
 
 
 
