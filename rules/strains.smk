@@ -36,7 +36,7 @@ checkpoint species_subsets:
 
 def get_species_for_sub_clustering(wildcards):
     import pandas as pd
-    subset_dir= checkpoints.subsets_dir.get() # subsetdir must be present
+    subset_dir= checkpoints.species_subsets.get() # subsetdir must be present
     cluster_file=checkpoints.cluster_mash.get().output.cluster_file
 
     df= pd.read_csv(cluster_file,sep='\t',index_col=0)
@@ -76,7 +76,7 @@ ruleorder: decompress_delta>get_deltadir
 
 rule merge_mummer_ani:
     input:
-        lambda wc: expand("mummer/ANI/{species}.tsv",species=get_species(wc))
+        lambda wc: expand("mummer/ANI/{species}.tsv",species=get_species_for_sub_clustering(wc))
     output:
         "tables/dist_strains.tsv"
     run:
@@ -109,7 +109,7 @@ rule run_mummer:
         "../envs/mummer.yaml"
     resources:
         time= lambda wc, input, threads: estimate_time_mummer(input,threads),
-        mem= 5
+        mem= 2
     log:
         "logs/mummer/workflows/{species}.txt"
     params:
