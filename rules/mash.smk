@@ -54,9 +54,9 @@ checkpoint cluster_mash:
 
 def get_species(wildcards):
     import pandas as pd
-    dir=checkpoints.cluster_mash.get().output.cluster_file
+    cluster_file=checkpoints.cluster_mash.get().output.cluster_file
 
-    df= pd.read_csv(input[0],sep='\t',index_col=0)
+    df= pd.read_csv(cluster_file,sep='\t',index_col=0)
     return list(df.Species.unique())
 
 
