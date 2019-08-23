@@ -84,7 +84,7 @@ rule merge_mummer_ani:
 
 rule run_mummer:
     input:
-        genome_list="mummer/subsets/{species}.txt",
+        genome_list_dir="mummer/subsets",
         genome_folder= genome_folder,
         genome_stats="tables/genome_stats.tsv",
         delta_dir="mummer/delta"
@@ -103,7 +103,7 @@ rule run_mummer:
         path= os.path.dirname(workflow.snakefile)
     shell:
         "snakemake -s {params.path}/rules/mummer.smk "
-        "--config genome_list='{input.genome_list}' "
+        "--config genome_list='{input.genome_list}/{wildcards.species}.txt' "
         " genome_folder='{input.genome_folder}' "
         " species={wildcards.species} "
         " genome_stats={input.genome_stats} "
