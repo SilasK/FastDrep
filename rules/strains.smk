@@ -3,13 +3,12 @@ rule Dstrain:
     input:
         ANI="tables/dist_strains.tsv",
         ani_dir='mummer/ANI',
-        subsets_dir="mummer/subsets",
         delta_dir="mummer/delta"
     output:
         "mummer/delta.tar.gz"
     shell:
         " tar -czf {input.delta_dir}.tar.gz {input.delta_dir} ;"
-        "rm -rf {input.subsets_dir} {input.delta_dir} {input.ani_dir}"
+        "rm -rf {input.delta_dir} {input.ani_dir}"
 
 
 localrules: species_subsets
