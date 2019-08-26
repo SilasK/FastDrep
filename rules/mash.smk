@@ -63,9 +63,9 @@ def get_species(wildcards):
 rule get_representatives:
     input:
         dir= genome_folder,
-        cluster_file= rules.cluster_mash.output.cluster_file
+        cluster_file= "tables/mag2{taxrank}.tsv"
     output:
-        dir= directory("representatives/species"),
+        dir= directory("representatives/{taxrank}"),
     run:
 
         import pandas as pd

@@ -122,3 +122,18 @@ rule run_mummer:
         " genome_stats={input.genome_stats} "
         " --rerun-incomplete "
         "-j {threads} --nolock 2> {log}"
+
+
+localrules: cluster_strains
+checkpoint cluster_strains:
+    input:
+        dists=rules.merge_mummer_ani.output[0],
+        quality ="tables/Genome_quality.tsv",
+        mag2species= "tables/mag2species.tsv"
+    output:
+        cluster_file="tables/mag2strains.tsv"
+    params:
+        #treshold=config['species_treshold'],
+        linkage_method=config.get('linkage_method','average'),
+    script:
+        "../scripts/group_strains.py"
