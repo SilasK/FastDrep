@@ -23,7 +23,7 @@ if __name__=='__main__':
 
     Strains= mag2species.copy()
 
-    for species,data in tqdm(M.groupby('Species')):
+    for species,data in M.groupby('Species'):
 
         if have_strain_gap[species]:
 
@@ -61,12 +61,12 @@ if __name__=='__main__':
 
 
     print(f"Identified { Strains.Strain.unique().size} strains")
-    Strains.to_csv(snakemake.output.mag2strain,sep='\t')
+
 
 
     Q= gd.load_quality(snakemake.input.quality)
     quality_score= Q.eval(quality_score_formula)
 
-    df['Representative_Strain']=gd.best_genome_from_table(df.Strain,quality_score)
+    Strains['Representative_Strain']=gd.best_genome_from_table(Strains.Strain,quality_score)
 
-    df.to_csv(snakemake.output.cluster_file,sep='\t')
+    Strains.to_csv(snakemake.output.mag2strain,sep='\t')
