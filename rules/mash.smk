@@ -80,10 +80,10 @@ checkpoint get_representatives:
 
         rep= "Representative_S"+wildcards.taxrank[1:]
 
-
-        input_dir= os.path.relpath(input.dir,start=output_dir)
         output_dir = output.dir
         os.makedirs(output_dir)
+        input_dir= os.path.relpath(input.dir,start=output_dir)
+
 
 
         for genome in df.unique():
