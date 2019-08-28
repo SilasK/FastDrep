@@ -4,6 +4,8 @@ rule sendsketch:
         os.path.join(genome_folder,"{genome}.fasta")
     output:
         "taxonomy/sendsketch/{genome}.tsv"
+    conda:
+        "../envs/bbmap.yaml"
     shell:
         "sendsketch.sh in={input} out={output} protein"
 
