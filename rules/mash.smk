@@ -86,7 +86,7 @@ checkpoint get_representatives:
 
 
 
-        for genome in df.unique():
+        for genome in df[rep].unique():
             os.symlink(os.path.join(input_dir,genome+'.fasta'),
                        os.path.join(output_dir,genome+'.fasta')
                    )
