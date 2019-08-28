@@ -11,4 +11,4 @@ rule sendsketch:
 
 rule combine_tax_sketch:
     input:
-        expand(rules.sendsketch.output[0], genome= get_species(wildcards))
+        lambda wildcards: expand(rules.sendsketch.output[0], genome= get_species(wildcards))
