@@ -66,7 +66,7 @@ rule get_deltadir:
 
 rule decompress_delta:
     input:
-        "mummer/delta.tar.gz"
+        ancient("mummer/delta.tar.gz")
     output:
         directory("mummer/delta")
     shell:
@@ -131,7 +131,7 @@ checkpoint cluster_strains:
         quality ="tables/Genome_quality.tsv",
         mag2species= "tables/mag2species.tsv"
     output:
-        cluster_file="tables/mag2strains.tsv"
+        mag2strain="tables/mag2strains.tsv"
     params:
         #treshold=config['species_treshold'],
         linkage_method=config.get('linkage_method','average'),
