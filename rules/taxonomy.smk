@@ -6,8 +6,13 @@ rule sendsketch:
         "taxonomy/sendsketch/{genome}.tsv"
     conda:
         "../envs/bbmap.yaml"
+    threads:
+        1
+    resources:
+        mem= 1,
+        time=10
     shell:
-        "sendsketch.sh in={input} out={output} protein"
+        "sendsketch.sh in={input} out={output} protein -Xmx{resources.mem}g"
 
 rule combine_tax_sketch:
     input:
