@@ -137,3 +137,25 @@ checkpoint cluster_strains:
         linkage_method=config.get('linkage_method','average'),
     script:
         "../scripts/group_strains.py"
+
+
+checkpoint get_ref_bbsplit:
+    input:
+        dir= genome_folder,
+        cluster_file= "tables/mag2strains.tsv"
+    output:
+        dir= directory("representatives/merged_strains"),
+    run:
+
+        import pandas as pd
+        df= pd.read_csv(input.cluster_file,sep='\t')
+
+
+        os.makedirs(output.dir)
+
+        for species_name,sp in df.groupby('Species'):
+            with open(os.path.join(output.dir,species_name+'.fasta'),'w') as fasta_out:
+                for genome in sp.Representative_Strains.unique():
+
+                    with open(os.path.join(input.dir,genome+'.fasta')) as fasta_in:
+                        fasta_out.write(fasta_in.read())

@@ -59,8 +59,15 @@ def get_species(wildcards):
     df= pd.read_csv(cluster_file,sep='\t',index_col=0)
     return list(df.Species.unique())
 
+def get_representative_species(wildcards):
+    import pandas as pd
+    cluster_file=checkpoints.cluster_mash.get().output.cluster_file
 
-rule get_representatives:
+    df= pd.read_csv(cluster_file,sep='\t',index_col=0)
+    return list(df.Representative_Species.unique())
+
+
+checkpoint get_representatives:
     input:
         dir= genome_folder,
         cluster_file= "tables/mag2{taxrank}.tsv"
@@ -71,10 +78,15 @@ rule get_representatives:
         import pandas as pd
         df= pd.read_csv(input.cluster_file,sep='\t')
 
+        rep= "Representative_S"+wildcards.taxrank[1:]
+
+
+        input_dir= os.path.relpath(input.dir,start=output_dir)
         output_dir = output.dir
         os.makedirs(output_dir)
-        input_dir= os.path.relpath(input.dir,start=output_dir)
-        for genome in df.Representative_Species.unique():
+
+
+        for genome in df.unique():
             os.symlink(os.path.join(input_dir,genome+'.fasta'),
                        os.path.join(output_dir,genome+'.fasta')
                    )
