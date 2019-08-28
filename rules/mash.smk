@@ -78,7 +78,11 @@ checkpoint get_representatives:
         import pandas as pd
         df= pd.read_csv(input.cluster_file,sep='\t')
 
-        rep= "Representative_S"+wildcards.taxrank[1:]
+        if wildcards.taxrank=='species':
+            rep= "Representative_Species"
+        elif wildcards.taxrank=='strains':
+            rep= "Representative_Strain"
+        else: raise Exception(f"taxrank should be strains or species got {wildcards.taxrank} ")
 
         output_dir = output.dir
         os.makedirs(output_dir)
