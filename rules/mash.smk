@@ -112,6 +112,7 @@ rule run_bbsketch:
         amino=True
     shell:
         "snakemake -s {params.path}/rules/bbsketch.smk "
+        " --reason "
         "--config  "
         " genome_folder='{input.genome_folder}' "
         " sketch={output.sketch} "

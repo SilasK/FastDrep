@@ -1,7 +1,5 @@
 from os import path
 
-
-
 genome_folder= config['genome_folder']
 assert (path.isdir(genome_folder) & path.exists(genome_folder))
 genomes= glob_wildcards(os.path.join(genome_folder,'{genome}.fasta')).genome
@@ -28,6 +26,7 @@ rule bbsketch:
     params:
         k=k,
         translate=amino,
+        overwrite=True,
         command="bbsketch.sh",
         name0="{genome}"
     threads:
@@ -37,26 +36,25 @@ rule bbsketch:
 
 rule mergesketch:
     input:
-        input= lambda wildcards: expand(os.path.join(genome_folder,"{genome}.fasta"),
+        expand("bbsketch/sketches/{genome}.sketch",
                                         genome= genomes)
     output:
         out=sketch
     threads:
-        16
-    params:
-        amino=amino,
-        command="mergesketch.sh"
-    script:
-        "../scripts/runBB.py"
+        1
+    shell:
+        "cat {input} | gzip > {output}"
+
 
 
 rule allvall:
     input:
-        input=sketch
+        ref=sketch
     output:
         out=dists
     params:
         amino=amino,
+        overwrite=True,
         command="comparesketch.sh alltoall",
         format=3
     threads:
