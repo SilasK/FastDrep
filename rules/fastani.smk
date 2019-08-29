@@ -68,7 +68,7 @@ rule combine_fastANI:
     input:
         get_allFastANI
     output:
-        "ANI.tsv"
+        "tables/fastANI_dists.tsv"
     shell:
         "cat {input} > {output};"
         "rm -r clusters "
