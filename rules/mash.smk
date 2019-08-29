@@ -94,3 +94,33 @@ checkpoint get_representatives:
             os.symlink(os.path.join(input_dir,genome+'.fasta'),
                        os.path.join(output_dir,genome+'.fasta')
                    )
+
+
+
+rule run_bbsketch:
+    input:
+        genome_folder= genome_folder,
+    output:
+        sketch="bbsketch/mags.sketch.gz",
+        dists= "tables/bbsketch_dists.tsv"
+    threads:
+        config['threads']
+    conda:
+        "../envs/bbmap.yaml"
+    resources:
+        mem= 50
+    log:
+        "logs/bbsketch/workflow.log"
+    params:
+        path= os.path.dirname(workflow.snakefile),
+        amino=True
+    shell:
+        "snakemake -s {params.path}/rules/bbsketch.smk "
+        " --reason "
+        "--config  "
+        " genome_folder='{input.genome_folder}' "
+        " sketch={output.sketch} "
+        " amino={params.amino} "
+        " dists={output.dists} "
+        " --rerun-incomplete "
+        "-j {threads} --nolock 2> {log}"

@@ -1,4 +1,8 @@
 
+
+
+
+
 rule sendsketch:
     input:
         os.path.join(genome_folder,"{genome}.fasta")
