@@ -43,5 +43,10 @@ rule sendsketch:
         "logs/bbsketch/sendsketch.log"
     conda:
         "../envs/bbmap.yaml"
+    threads:
+        1
+    resources:
+        mem= 1,
+        time=10
     shell:
         "sendsketch.sh in={input} out={output} protein format=3 minid={params.minid} 2> {log}"
