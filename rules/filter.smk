@@ -115,6 +115,7 @@ checkpoint rename_genomes:
 
         Mapping['Original_fasta'] = glob(os.path.join(input.genome_folder,"*.f*"))
         Mapping.index = gd.simplify_index(Mapping.Original_fasta)
+        Mapping.index.name='Original'
         Mapping.sort_index(inplace=True)
 
         Mapping['Genome']= gen_names_for_range(Mapping.shape[0],"MAG")
