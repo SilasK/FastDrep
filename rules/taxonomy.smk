@@ -28,6 +28,7 @@ rule run_bbsketch:
         " amino={params.amino} "
         " dists={output.dists} "
         " --rerun-incomplete "
+        " --quiet "
         "-j {threads} --nolock 2> {log}"
 
 

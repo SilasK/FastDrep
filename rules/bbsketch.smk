@@ -31,6 +31,8 @@ rule bbsketch:
         overwrite=True,
         command="bbsketch.sh",
         name0="{genome}"
+    resources:
+        mem= 1
     log:
         f"logs/bbsketch/sketch{postfix}/{{genome}}.log"
     threads:
@@ -61,6 +63,8 @@ rule allvall:
         overwrite=True,
         command="comparesketch.sh alltoall",
         format=3
+    resources:
+        mem= 100
     log:
         f"logs/bbsketch/alltoall.log"
     threads:
