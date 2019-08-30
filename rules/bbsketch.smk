@@ -12,7 +12,9 @@ rule bbsketch:
         name0="{genome}"
     resources:
         mem= 1,
-        time= 5
+        #time= 5
+    group:
+        "bbsketch"
     log:
         "logs/bbsketch/sketch_{NTorAA}/{genome}.log"
     conda:
@@ -44,7 +46,7 @@ def get_mags(wildcards):
     folder=checkpoints.rename_genomes.get().output.genome_folder
 
     genomes= glob_wildcards(os.path.join(folder,'{genome}.fasta')).genome
-    return lsit(genomes)
+    return list(genomes)
 
 
 rule mergesketch_mags:
@@ -58,7 +60,7 @@ rule mergesketch_mags:
     threads:
         1
     run:
-        io.cat_files(input,output[0],gzip=True)
+        io.cat_files(input,output[0],gzip=False)
 
 
 
@@ -73,7 +75,8 @@ rule allvall:
         amino=lambda wildcards: wildcards.NTorAA=='aa',
         overwrite=True,
         command="comparesketch.sh alltoall",
-        format=3
+        format=3,
+        k=lambda wildcards: config['bbsketch'][wildcards.NTorAA]['k'],
     conda:
         "../envs/bbmap.yaml"
     resources:

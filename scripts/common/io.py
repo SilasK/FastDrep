@@ -15,11 +15,11 @@ def simplify_path(path,remove_gz=True):
 def cat_files(files,outfilename,gzip=False):
     """ cat files in python
     """
-    import gzip
+    import gzip as gz
     import shutil
 
     if gzip:
-        outhandle= gzip.open
+        outhandle= gz.open
     else:
         outhandle = open
 

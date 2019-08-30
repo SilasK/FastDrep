@@ -27,6 +27,13 @@ rule all:
     input:
         # "ANI.tsv",
         #expand("pyani/{method}",method=['ANIm','ANIb']),
-        "representatives/species",
         "tables/mash_dists.txt",
-        "tables/genome_stats.tsv"
+        "tables/genome_stats.tsv",
+rule all_bbsketch:
+    input:
+        "tables/bbsketch_aa.tsv",
+        "tables/bbsketch_nt.tsv"
+rule all_species:
+    input:
+        "tables/refseq_mapping_species.tsv",
+        "representatives/species",
