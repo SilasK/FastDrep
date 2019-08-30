@@ -41,8 +41,10 @@ def load_ani_table_(dist_file,header=None,simplify_names=False):
 
 
 def load_bbsketch(dist_file,format=3):
-    """
-        loads bbsketch file
+    """ reads output of sendsketch.sh
+        format=3 [query,ref,ANI..]
+        format=2 Table for one query
+            parses parameters in first line returns df,params
     """
 
     if format==3:
