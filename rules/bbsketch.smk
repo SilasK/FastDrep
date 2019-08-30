@@ -10,8 +10,10 @@ amino= config['amino']
 
 if amino:
     k="9,12"
+    postfix='_aa'
 else:
-    k=31
+    k="31,24"
+    postfix='_nt'
 
 rule all:
     input:
@@ -22,13 +24,15 @@ rule bbsketch:
     input:
         input=os.path.join(genome_folder,"{genome}.fasta")
     output:
-        out=temp("bbsketch/sketches/{genome}.sketch")
+        out=temp(f"bbsketch/sketches{postfix}/{{genome}}.sketch")
     params:
         k=k,
         translate=amino,
         overwrite=True,
         command="bbsketch.sh",
         name0="{genome}"
+    log:
+        f"logs/bbsketch/sketch{postfix}/{{genome}}.log"
     threads:
         1
     script:
@@ -36,7 +40,7 @@ rule bbsketch:
 
 rule mergesketch:
     input:
-        expand("bbsketch/sketches/{genome}.sketch",
+        expand(rules.bbsketch.output[0],
                                         genome= genomes)
     output:
         out=sketch
@@ -57,6 +61,8 @@ rule allvall:
         overwrite=True,
         command="comparesketch.sh alltoall",
         format=3
+    log:
+        f"logs/bbsketch/alltoall.log"
     threads:
         16
     script:

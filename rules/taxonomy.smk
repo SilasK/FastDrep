@@ -1,18 +1,47 @@
 
 
+rule run_bbsketch:
+    input:
+        genome_folder= genome_folder,
+    output:
+        sketch="bbsketch/mags_{NTorAA}.sketch.gz",
+        dists= "tables/bbsketch_{NTorAA}.tsv"
+    wildcard_constraints:
+        NTorAA="(nt|aa)"
+    threads:
+        config['threads']
+    conda:
+        "../envs/bbmap.yaml"
+    resources:
+        mem= 50
+    log:
+        "logs/bbsketch/workflow_{NTorAA}.log"
+    params:
+        path= os.path.dirname(workflow.snakefile),
+        amino=lambda wildcards: wildcards.NTorAA=='aa'
+    shell:
+        "snakemake -s {params.path}/rules/bbsketch.smk "
+        " --reason "
+        "--config  "
+        " genome_folder='{input.genome_folder}' "
+        " sketch={output.sketch} "
+        " amino={params.amino} "
+        " dists={output.dists} "
+        " --rerun-incomplete "
+        "-j {threads} --nolock 2> {log}"
 
 
 
 rule sendsketch:
     input:
-        os.path.join(genome_folder,"{genome}.fasta")
+        "bbsketch/mags_aa.sketch.gz"
     output:
-        "taxonomy/sendsketch/{genome}.tsv"
+        "tables/refseq_mapping.tsv"
+    params:
+        minid=0.9
+    log:
+        "logs/bbsketch/sendsketch.log"
     conda:
         "../envs/bbmap.yaml"
     shell:
-        "sendsketch.sh in={input} out={output} protein"
-
-rule combine_tax_sketch:
-    input:
-        lambda wildcards: expand(rules.sendsketch.output[0], genome= get_representative_species(wildcards))
+        "sendsketch.sh in={input} out={output} protein format=3 minid={params.minid} 2> {log}"
