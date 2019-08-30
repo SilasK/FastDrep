@@ -67,7 +67,7 @@ def get_representative_mapping(cluster_file,resolution_level):
         rep= "Representative_Species"
     elif resolution_level=='strains':
         rep= "Representative_Strain"
-    else: raise Exception(f"taxrank should be strains or species got {resolution_level} ")
+    else: raise Exception(f"resolution_level should be strains or species got {resolution_level} ")
 
     return df[rep]
 
@@ -82,6 +82,7 @@ def get_representatives(wildcards):
         cluster_file=checkpoints.cluster_species.get().output.cluster_file
     elif resolution_level=='strains':
         cluster_file=checkpoints.cluster_strains.get().output.cluster_file
+    else: raise Exception(f"resolution_level should be strains or species got {resolution_level} ")
 
     mapping= get_representative_mapping(cluster_file, resolution_level)
 

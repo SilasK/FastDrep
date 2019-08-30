@@ -5,7 +5,6 @@ checkpoint build_sketch:
         genome_folder= genome_folder,
     output:
         sketch_folder= directory("bbsketch/sketches_{NTorAA}"),
-        flag=touch("bbsketch/all_skeches_built_{NTorAA}")
     wildcard_constraints:
         NTorAA="(nt|aa)"
     threads:
@@ -22,14 +21,12 @@ checkpoint build_sketch:
         k=lambda wildcards: config['bbsketch'][wildcards.NTorAA]['k']
     shell:
         "snakemake -s {params.path}/rules/buildsketch.smk "
-        " --reason "
         "--config  "
         " k='{params.k}' "
         " genome_folder='{input.genome_folder}' "
         " sketch_folder='{output.sketch_folder}' "
         " amino={params.amino} "
         " --rerun-incomplete "
-        " --quiet "
         "-j {threads} --nolock 2> {log}"
 
 
@@ -43,11 +40,11 @@ def get_mags(wildcards):
 
 def mergesketch_input(wildcards):
 
-    checkpoints.build_sketch.get(**wildcards)
+    checkpoints.build_sketch.get(NTorAA=wildcards.NTorAA)
 
     if wildcards.resolution_level=='mags':
         return  expand("bbsketch/sketches_{NTorAA}/{genome}.sketch.gz",
-                       genome=get_representatives(wildcards),**wildcards)
+                       genome=get_mags(wildcards),**wildcards)
     else:
         return expand("bbsketch/sketches_{NTorAA}/{genome}.sketch.gz",
                genome=get_representatives(wildcards),**wildcards)
@@ -59,7 +56,7 @@ def mergesketch_input(wildcards):
 localrules: mergesketch
 rule mergesketch:
     input:
-        mergesketch_input
+        lambda wildcards: mergesketch_input(wildcards)
     wildcard_constraints:
         NTorAA="(aa|nt)",
         resolution_level="(species|strains|mags)"

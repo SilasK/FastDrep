@@ -27,8 +27,6 @@ rule bbsketch:
         name0="{genome}"
     resources:
         mem= 1,
-    group:
-        "bbsketch"
     log:
         f"logs/{sketch_folder}/{{genome}}.log"
     # conda:
