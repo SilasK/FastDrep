@@ -24,7 +24,7 @@ rule bbsketch:
     input:
         input=os.path.join(genome_folder,"{genome}.fasta")
     output:
-        out=temp(f"bbsketch/sketches{postfix}/{{genome}}.sketch")
+        out=f"bbsketch/sketches{postfix}/{{genome}}.sketch"
     params:
         k=k,
         translate=amino,
@@ -48,8 +48,14 @@ rule mergesketch:
         out=sketch
     threads:
         1
-    shell:
-        "cat {input} | gzip > {output}"
+    run:
+        import gzip
+        import shutil
+        with gzip.open(output[0], 'wb') as f_out:
+            for f in input:
+                with open(f, 'rb') as f_in:
+                    shutil.copyfileobj(f_in, f_out)
+
 
 
 
