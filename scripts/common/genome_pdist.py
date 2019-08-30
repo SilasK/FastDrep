@@ -40,6 +40,38 @@ def load_ani_table_(dist_file,header=None,simplify_names=False):
 
 
 
+def load_bbsketch(dist_file,format=3):
+    """
+        loads bbsketch file
+    """
+
+    if format==3:
+        bbs= pd.read_csv(dist_file,index_col=[0,1],sep='\t')
+        bbs.index.names=['Genome1','Genome2']
+        if (bbs.QTaxID==-1).all():
+            bbs.drop(['QTaxID','RTaxID'],axis=1,inplace=True)
+
+        bbs['Identity']= bbs.iloc[:,0]/100.
+
+        return bbs
+    elif:
+        format==2:
+
+        f= open(send_sketch_file)
+        f.readline() # trash empty line
+        comment_line= f.readline().strip()
+        params= dict( key_value.split(':')  for key_value in comment_line.split('\t'))
+
+        df= pd.read_csv(f,sep='\t')
+
+        convert_percentages(df)
+
+
+
+        return df,params
+    else:
+        raise NotImplementedError("I don't know how to parse other formats than 2,3 of bbsketch")
+
 
 
 
