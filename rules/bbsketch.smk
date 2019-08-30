@@ -1,46 +1,36 @@
 
-rule bbsketch:
+
+checkpoint build_sketch:
     input:
-        input=os.path.join(genome_folder,"{genome}.fasta")
+        genome_folder= genome_folder,
     output:
-        out="bbsketch/sketches_{NTorAA}/{genome}.sketch.gz"
-    params:
-        k= lambda wildcards: config['bbsketch'][wildcards.NTorAA]['k'],
-        translate=lambda wildcards: wildcards.NTorAA=='aa',
-        overwrite=True,
-        command="bbsketch.sh",
-        name0="{genome}"
-    resources:
-        mem= 1,
-        #time= 5
-    group:
-        "bbsketch"
-    log:
-        "logs/bbsketch/sketch_{NTorAA}/{genome}.log"
+        sketch_folder= directory("bbsketch/sketches_{NTorAA}"),
+        flag=touch("bbsketch/all_skeches_built_{NTorAA}")
+    wildcard_constraints:
+        NTorAA="(nt|aa)"
+    threads:
+        config['threads']
     conda:
         "../envs/bbmap.yaml"
-    threads:
-        1
-    script:
-        "../scripts/runBB.py"
-
-
-localrules: mergesketch
-rule mergesketch:
-    input:
-        lambda wildcards: expand("bbsketch/sketches_{{NTorAA}}/{genome}.sketch.gz",
-               genome=get_representatives(wildcards))
-    wildcard_constraints:
-        NTorAA="(aa|nt)",
-        resolution_level="(species|strains)"
-    group:
-        "bbsketch"
-    output:
-        out="bbsketch/{resolution_level}_{NTorAA}.sketch.gz"
-    threads:
-        1
-    run:
-        io.cat_files(input,output[0],gzip=False)
+    resources:
+        mem= 50
+    log:
+        "logs/bbsketch/workflow_{NTorAA}.log"
+    params:
+        path= os.path.dirname(workflow.snakefile),
+        amino=lambda wildcards: wildcards.NTorAA=='aa',
+        k=lambda wildcards: config['bbsketch'][wildcards.NTorAA]['k']
+    shell:
+        "snakemake -s {params.path}/rules/buildsketch.smk "
+        " --reason "
+        "--config  "
+        " k='{params.k}' "
+        " genome_folder='{input.genome_folder}' "
+        " sketch_folder='{output.sketch_folder}' "
+        " amino={params.amino} "
+        " --rerun-incomplete "
+        " --quiet "
+        "-j {threads} --nolock 2> {log}"
 
 
 def get_mags(wildcards):
@@ -51,20 +41,38 @@ def get_mags(wildcards):
     return list(genomes)
 
 
-rule mergesketch_mags:
+def mergesketch_input(wildcards):
+
+    checkpoints.build_sketch.get(**wildcards)
+
+    if wildcards.resolution_level=='mags':
+        return  expand("bbsketch/sketches_{NTorAA}/{genome}.sketch.gz",
+                       genome=get_representatives(wildcards),**wildcards)
+    else:
+        return expand("bbsketch/sketches_{NTorAA}/{genome}.sketch.gz",
+               genome=get_representatives(wildcards),**wildcards)
+
+
+
+
+
+localrules: mergesketch
+rule mergesketch:
     input:
-        lambda wildcards: expand("bbsketch/sketches_{{NTorAA}}/{genome}.sketch.gz",
-               genome=get_mags(wildcards))
+        mergesketch_input
     wildcard_constraints:
         NTorAA="(aa|nt)",
+        resolution_level="(species|strains|mags)"
     output:
-        out="bbsketch/mags_{NTorAA}.sketch.gz"
-    group:
-        "bbsketch"
+        out="bbsketch/{resolution_level}_{NTorAA}.sketch.gz"
     threads:
         1
     run:
         io.cat_files(input,output[0],gzip=False)
+
+
+
+
 
 
 

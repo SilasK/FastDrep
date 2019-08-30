@@ -5,3 +5,4 @@ channels:
 
 dependencies:
     - bbmap=38
+    - snakemake=5.4
