@@ -95,7 +95,7 @@ def gen_names_for_range(N,prefix='',start=1):
 genome_folder='mags'
 
 localrules: rename_genomes, decompress_genomes
-rule rename_genomes:
+checkpoint rename_genomes:
     input:
         genome_folder= filter_genome_folder,
         stats="tables/inputgenome_stats.tsv",

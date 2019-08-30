@@ -12,6 +12,21 @@ def simplify_path(path,remove_gz=True):
 
     return name
 
+def cat_files(files,outfilename,gzip=False):
+    """ cat files in python
+    """
+    import gzip
+    import shutil
+
+    if gzip:
+        outhandle= gzip.open
+    else:
+        outhandle = open
+
+    with outhandle(outfilename, 'wb') as f_out:
+        for f in files:
+            with open(f, 'rb') as f_in:
+                shutil.copyfileobj(f_in, f_out)
 
 def convert_percentages(df):
     """Convet all columns with strings and % at the end to percentages

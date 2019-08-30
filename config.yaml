@@ -8,6 +8,11 @@ fastani:
   fragLen: 3000
   minFrag: 50
   subset_size: 100
+bbsketch:
+  aa:
+    k: "9,12"
+  nt:
+    k: "31,24"
 species_treshold: 'auto' # ]0.8-1[ or 'auto' / auto detects best treshold in range [0.9,0.95]
 genome_folder: 'all_bins'
 genome_qualities: 'Checkm_quality_allbins.tsv'

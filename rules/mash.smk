@@ -23,7 +23,7 @@ rule mash_calculate_dist:
     input:
         genomes=rules.mash_sketch_genome.output
     output:
-        "mash/dists.txt"
+        "tables/mash_dists.txt"
     params:
         d= config['mash']['max_dist']
     threads:
@@ -37,8 +37,8 @@ rule mash_calculate_dist:
 
 
 
-localrules: cluster_mash,get_representatives
-checkpoint cluster_mash:
+localrules: cluster_species,get_representatives
+checkpoint cluster_species:
     input:
         dists=rules.mash_calculate_dist.output[0],
         quality ="tables/Genome_quality.tsv",
@@ -54,43 +54,54 @@ checkpoint cluster_mash:
 
 def get_species(wildcards):
     import pandas as pd
-    cluster_file=checkpoints.cluster_mash.get().output.cluster_file
+    cluster_file=checkpoints.cluster_species.get().output.cluster_file
 
     df= pd.read_csv(cluster_file,sep='\t',index_col=0)
     return list(df.Species.unique())
 
-def get_representative_species(wildcards):
+def get_representative_mapping(cluster_file,resolution_level):
     import pandas as pd
-    cluster_file=checkpoints.cluster_mash.get().output.cluster_file
+    df= pd.read_csv(cluster_file,sep='\t')
 
-    df= pd.read_csv(cluster_file,sep='\t',index_col=0)
-    return list(df.Representative_Species.unique())
+    if resolution_level=='species':
+        rep= "Representative_Species"
+    elif resolution_level=='strains':
+        rep= "Representative_Strain"
+    else: raise Exception(f"taxrank should be strains or species got {resolution_level} ")
+
+    return df[rep]
+
+
+def get_representatives(wildcards):
+    import pandas as pd
+
+    resolution_level= wildcards.resolution_level
+
+    if resolution_level=='species':
+
+        cluster_file=checkpoints.cluster_species.get().output.cluster_file
+    elif resolution_level=='strains':
+        cluster_file=checkpoints.cluster_strains.get().output.cluster_file
+
+    mapping= get_representative_mapping(cluster_file, resolution_level)
+
+    return list(mapping.unique())
 
 
 checkpoint get_representatives:
     input:
         dir= genome_folder,
-        cluster_file= "tables/mag2{taxrank}.tsv"
+        cluster_file= "tables/mag2{resolution_level}.tsv"
     output:
-        dir= directory("representatives/{taxrank}"),
+        dir= directory("representatives/{resolution_level}"),
     run:
-
-        import pandas as pd
-        df= pd.read_csv(input.cluster_file,sep='\t')
-
-        if wildcards.taxrank=='species':
-            rep= "Representative_Species"
-        elif wildcards.taxrank=='strains':
-            rep= "Representative_Strain"
-        else: raise Exception(f"taxrank should be strains or species got {wildcards.taxrank} ")
+        mapping = get_representative_mapping(input.cluster_file,wildcards.resolution_level)
 
         output_dir = output.dir
         os.makedirs(output_dir)
         input_dir= os.path.relpath(input.dir,start=output_dir)
 
-
-
-        for genome in df[rep].unique():
+        for genome in mapping.unique():
             os.symlink(os.path.join(input_dir,genome+'.fasta'),
                        os.path.join(output_dir,genome+'.fasta')
                    )

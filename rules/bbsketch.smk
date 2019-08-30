@@ -1,79 +1,105 @@
-from os import path
-
-genome_folder= config['genome_folder']
-assert (path.isdir(genome_folder) & path.exists(genome_folder))
-genomes= glob_wildcards(os.path.join(genome_folder,'{genome}.fasta')).genome
-
-sketch=config['sketch']
-dists= config['dists']
-amino= config['amino']
-
-if amino:
-    k="9,12"
-    postfix='_aa'
-else:
-    k="31,24"
-    postfix='_nt'
-
-rule all:
-    input:
-        sketch,
-        dists
 
 rule bbsketch:
     input:
         input=os.path.join(genome_folder,"{genome}.fasta")
     output:
-        out=f"bbsketch/sketches{postfix}/{{genome}}.sketch"
+        out="bbsketch/sketches_{NTorAA}/{genome}.sketch.gz"
     params:
-        k=k,
-        translate=amino,
+        k= lambda wildcards: config['bbsketch'][wildcards.NTorAA]['k'],
+        translate=lambda wildcards: wildcards.NTorAA=='aa',
         overwrite=True,
         command="bbsketch.sh",
         name0="{genome}"
     resources:
-        mem= 1
+        mem= 1,
+        time= 5
     log:
-        f"logs/bbsketch/sketch{postfix}/{{genome}}.log"
+        "logs/bbsketch/sketch_{NTorAA}/{genome}.log"
+    conda:
+        "../envs/bbmap.yaml"
     threads:
         1
     script:
         "../scripts/runBB.py"
 
+
+localrules: mergesketch
 rule mergesketch:
     input:
-        expand(rules.bbsketch.output[0],
-                                        genome= genomes)
+        lambda wildcards: expand("bbsketch/sketches_{{NTorAA}}/{genome}.sketch.gz",
+               genome=get_representatives(wildcards))
+    wildcard_constraints:
+        NTorAA="(aa|nt)",
+        resolution_level="(species|strains)"
     output:
-        out=sketch
+        out="bbsketch/{resolution_level}_{NTorAA}.sketch.gz"
     threads:
         1
     run:
-        import gzip
-        import shutil
-        with gzip.open(output[0], 'wb') as f_out:
-            for f in input:
-                with open(f, 'rb') as f_in:
-                    shutil.copyfileobj(f_in, f_out)
+        io.cat_files(input,output[0],gzip=False)
 
+
+def get_mags(wildcards):
+
+    folder=checkpoints.rename_genomes.get().output.genome_folder
+
+    genomes= glob_wildcards(os.path.join(folder,'{genome}.fasta')).genome
+    return lsit(genomes)
+
+
+rule mergesketch_mags:
+    input:
+        lambda wildcards: expand("bbsketch/sketches_{{NTorAA}}/{genome}.sketch.gz",
+               genome=get_mags(wildcards))
+    wildcard_constraints:
+        NTorAA="(aa|nt)",
+    output:
+        out="bbsketch/mags_{NTorAA}.sketch.gz"
+    threads:
+        1
+    run:
+        io.cat_files(input,output[0],gzip=True)
 
 
 
 rule allvall:
     input:
-        ref=sketch
+        ref="bbsketch/mags_{NTorAA}.sketch.gz"
     output:
-        out=dists
+        out="tables/bbsketch_{NTorAA}.tsv"
+    wildcard_constraints:
+        NTorAA="(nt|aa)"
     params:
-        amino=amino,
+        amino=lambda wildcards: wildcards.NTorAA=='aa',
         overwrite=True,
         command="comparesketch.sh alltoall",
         format=3
+    conda:
+        "../envs/bbmap.yaml"
     resources:
-        mem= 100
+        mem= 50
     log:
-        f"logs/bbsketch/alltoall.log"
+        "logs/bbsketch/alltoall_{NTorAA}.log"
     threads:
-        16
+        config['threads']
     script:
         "../scripts/runBB.py"
+
+
+rule sendsketch:
+    input:
+        "bbsketch/{resolution_level}_aa.sketch.gz"
+    output:
+        "tables/refseq_mapping_{resolution_level}.tsv"
+    params:
+        minid=0.9
+    log:
+        "logs/bbsketch/sendsketch_{resolution_level}.log"
+    conda:
+        "../envs/bbmap.yaml"
+    threads:
+        1
+    resources:
+        mem= 1,
+    shell:
+        "sendsketch.sh in={input} out={output} protein format=3 minid={params.minid} 2> {log}"

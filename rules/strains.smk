@@ -14,7 +14,7 @@ rule Dstrain:
 localrules: species_subsets
 checkpoint species_subsets:
     input:
-        cluster_file=rules.cluster_mash.output.cluster_file,
+        cluster_file=rules.cluster_species.output.cluster_file,
     output:
         subsets_dir= temp(directory("mummer/subsets"))
     run:
@@ -37,7 +37,7 @@ checkpoint species_subsets:
 def get_species_for_sub_clustering(wildcards):
     import pandas as pd
     subset_dir= checkpoints.species_subsets.get() # subsetdir must be present
-    cluster_file=checkpoints.cluster_mash.get().output.cluster_file
+    cluster_file=checkpoints.cluster_species.get().output.cluster_file
 
     df= pd.read_csv(cluster_file,sep='\t',index_col=0)
 

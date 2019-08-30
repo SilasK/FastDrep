@@ -20,7 +20,7 @@ include: "rules/fastani.smk"
 include: "rules/mash.smk"
 include: "rules/pyani.smk"
 include: "rules/strains.smk"
-include: "rules/taxonomy.smk"
+include: "rules/bbsketch.smk"
 
 
 rule all:
@@ -28,5 +28,5 @@ rule all:
         # "ANI.tsv",
         #expand("pyani/{method}",method=['ANIm','ANIb']),
         "representatives/species",
-        "mash/dists.txt",
+        "tables/mash_dists.txt",
         "tables/genome_stats.tsv"
