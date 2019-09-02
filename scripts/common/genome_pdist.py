@@ -56,8 +56,7 @@ def load_bbsketch(dist_file,format=3):
         bbs['Identity']= bbs.iloc[:,0]/100.
 
         return bbs
-    elif:
-        format==2:
+    elif format==2:
 
         f= open(send_sketch_file)
         f.readline() # trash empty line
