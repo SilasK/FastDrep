@@ -19,7 +19,7 @@ rule Dstrain:
 def estimate_time_mummer(N,threads):
     "retur time in minutes"
 
-    time_per_mummer_call = 10/60
+    time_per_mummer_call = 20/60
 
     return int(N*time_per_mummer_call)//threads + 5
 
@@ -36,7 +36,7 @@ rule decompress_delta:
     output:
         directory("mummer/delta")
     shell:
-        "tar -xzf {input}"
+        "tar -xzf {input}; rm {input}"
 ruleorder: decompress_delta>get_deltadir
 
 def get_merge_mummer_ani_input(wildcards):
