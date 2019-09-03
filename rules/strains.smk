@@ -4,8 +4,6 @@ rule Dstrain:
         ANI="tables/dist_strains.tsv",
         ani_dir='mummer/ANI',
         delta_dir="mummer/delta"
-    output:
-        "mummer/delta.tar.gz"
     shell:
         " tar -czf {input.delta_dir}.tar.gz {input.delta_dir} ;"
         "rm -rf {input.delta_dir} {input.ani_dir}"
