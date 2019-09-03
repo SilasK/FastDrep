@@ -28,6 +28,7 @@ rule all:
         # "tables/fastANI_dists.tsv",
         #expand("pyani/{method}",method=['ANIm','ANIb']),
         "tables/mash_dists.txt",
+        "tables/dist_mummer.tsv",
         "tables/genome_stats.tsv",
 rule all_bbsketch:
     input:

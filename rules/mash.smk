@@ -126,18 +126,17 @@ checkpoint filter_mash:
 
         os.makedirs(output[0])
 
-
         fout=None
         for i,e in enumerate(G.edges()):
             if (i % params.N) ==0:
-                n= int(i // params.N )
+                n= int(i // params.N )+1
                 if fout is not None: fout.close()
                 fout= open(f"{output[0]}/subset_{n}.txt",'w')
-            else:
-                fout.write("\t".join(sorted(e))+'\n')
+
+            fout.write("\t".join(sorted(e))+'\n')
 
 def get_mummer_subsets(wildcards):
-    subset_dir= checkpoints.species_subsets.get().output[0]
+    subset_dir= checkpoints.filter_mash.get().output[0]
 
     subsets= glob_wildcards(os.path.join(subset_dir,'{subset}.txt')).subset
 

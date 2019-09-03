@@ -41,16 +41,23 @@ rule decompress_delta:
         "tar -xzf {input}"
 ruleorder: decompress_delta>get_deltadir
 
+def get_merge_mummer_ani_input(wildcards):
+
+    subsets=get_mummer_subsets(wildcards)
+    print(subsets)
+
+    return expand("mummer/ANI/{subset}.tsv",subset=subsets)
 
 rule merge_mummer_ani:
     input:
-        lambda wc: expand("mummer/ANI/{subset}.tsv",subset=get_mummer_subsets(wc))
+        get_merge_mummer_ani_input
     output:
         "tables/dist_mummer.tsv"
     run:
         import pandas as pd
         Mummer={}
         for file in input:
+            print(input,file)
             Mummer[io.simplify_path(file)]= pd.read_csv(file,index_col=[0,1],sep='\t')
 
         M= pd.concat(Mummer,axis=0)
@@ -85,7 +92,7 @@ rule run_mummer:
         "snakemake -s {params.path}/rules/mummer.smk "
         "--config comparison_list='{input.comparison_list}' "
         " genome_folder='{input.genome_folder}' "
-        " species={wildcards.species} "
+        " subset={wildcards.subset} "
         " genome_stats={input.genome_stats} "
         " --rerun-incomplete "
         "-j {threads} --nolock 2> {log}"
