@@ -1,7 +1,10 @@
 from os import path
 from itertools import combinations
 
-genomes= open(config['genome_list']).read().strip().replace('.fasta','').split()
+
+with open(config['comparison_list']) as f:
+    comparisons= [line.strip().split() for line in f]
+
 genome_folder= config['genome_folder']
 species= config['species']
 genome_stats= config['genome_stats']
@@ -72,7 +75,7 @@ rule parse_delta:
 
 rule combine:
     input:
-        ["mummer/delta/{}-{}.txt".format(*pair) for pair in combinations(genomes,2)]
+        ["mummer/delta/{}-{}.txt".format(*pair) for pair in comparisons]
     output:
         temp(f"mummer/ANI/{species}.txt")
     run:

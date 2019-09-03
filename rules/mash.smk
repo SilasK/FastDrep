@@ -105,3 +105,40 @@ checkpoint get_representatives:
             os.symlink(os.path.join(input_dir,genome+'.fasta'),
                        os.path.join(output_dir,genome+'.fasta')
                    )
+
+
+
+
+localrules: filter_mash
+checkpoint filter_mash:
+    input:
+        rules.mash_calculate_dist.output[0]
+    output:
+        temp(directory('mummer/subsets'))
+    params:
+        treshold=config['mummer']['max_dist'],
+        N=config['mummer']['subset_size']
+    run:
+
+        F= gd.load_mash(input[0])
+        G= gd.to_graph(F.query(f"Distance<={params.treshold}"))
+        G.remove_edges_from(G.selfloop_edges())
+
+        os.makedirs(output[0])
+
+
+        fout=None
+        for i,e in enumerate(G.edges()):
+            if (i % params.N) ==0:
+                n= int(i // params.N )
+                if fout is not None: fout.close()
+                fout= open(f"{output[0]}/subset_{n}.txt",'w')
+            else:
+                fout.write("\t".join(sorted(e))+'\n')
+
+def get_mummer_subsets(wildcards):
+    subset_dir= checkpoints.species_subsets.get().output[0]
+
+    subsets= glob_wildcards(os.path.join(subset_dir,'{subset}.txt')).subset
+
+    return subsets

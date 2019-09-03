@@ -11,51 +11,19 @@ rule Dstrain:
         "rm -rf {input.delta_dir} {input.ani_dir}"
 
 
-localrules: species_subsets
-checkpoint species_subsets:
-    input:
-        cluster_file=rules.cluster_species.output.cluster_file,
-    output:
-        subsets_dir= temp(directory("mummer/subsets"))
-    run:
-        import pandas as pd
-        labels= pd.read_csv(input[0],sep='\t',index_col=0).Species
-
-
-        os.makedirs(output.subsets_dir)
-
-        for species in labels.unique():
-
-            genomes_of_cluster= labels.index[labels==species].values
-            if len(genomes_of_cluster)>1:
-
-                with open(f"{output.subsets_dir}/{species}.txt","w") as f:
-
-                    f.write(''.join([g+'.fasta\n' for g in genomes_of_cluster ]))
-
-
-def get_species_for_sub_clustering(wildcards):
-    import pandas as pd
-    subset_dir= checkpoints.species_subsets.get() # subsetdir must be present
-    cluster_file=checkpoints.cluster_species.get().output.cluster_file
-
-    df= pd.read_csv(cluster_file,sep='\t',index_col=0)
-
-    Nspecies= df.groupby('Species').size()
-
-
-    return list(Nspecies.index[Nspecies>1])
 
 
 
-def estimate_time_mummer(input,threads):
+
+
+
+
+def estimate_time_mummer(N,threads):
     "retur time in minutes"
-
-    N= len(open(input.genome_list).read().split())
 
     time_per_mummer_call = 10/60
 
-    return int(N**2/2*time_per_mummer_call + N/2)//threads + 5
+    return int(N*time_per_mummer_call)//threads + 5
 
 localrules: get_deltadir,decompress_delta,Dstrain
 rule get_deltadir:
@@ -76,9 +44,9 @@ ruleorder: decompress_delta>get_deltadir
 
 rule merge_mummer_ani:
     input:
-        lambda wc: expand("mummer/ANI/{species}.tsv",species=get_species_for_sub_clustering(wc))
+        lambda wc: expand("mummer/ANI/{subset}.tsv",subset=get_mummer_subsets(wc))
     output:
-        "tables/dist_strains.tsv"
+        "tables/dist_mummer.tsv"
     run:
         import pandas as pd
         Mummer={}
@@ -86,7 +54,6 @@ rule merge_mummer_ani:
             Mummer[io.simplify_path(file)]= pd.read_csv(file,index_col=[0,1],sep='\t')
 
         M= pd.concat(Mummer,axis=0)
-        M['Species']=M.index.get_level_values(0)
         M.index= M.index.droplevel(0)
         M.to_csv(output[0],sep='\t')
 
@@ -97,26 +64,26 @@ rule merge_mummer_ani:
 
 rule run_mummer:
     input:
-        genome_list="mummer/subsets/{species}.txt",
+        comparison_list="mummer/subsets/{subset}.txt",
         genome_folder= genome_folder,
         genome_stats="tables/genome_stats.tsv",
         delta_dir="mummer/delta"
     output:
-        temp("mummer/ANI/{species}.tsv")
+        temp("mummer/ANI/{subset}.tsv")
     threads:
         config['threads']
     conda:
         "../envs/mummer.yaml"
     resources:
-        time= lambda wc, input, threads: estimate_time_mummer(input,threads),
+        time= lambda wc, input, threads: estimate_time_mummer(config['mummer']['subset_size'],threads),
         mem= 2
     log:
-        "logs/mummer/workflows/{species}.txt"
+        "logs/mummer/workflows/{subset}.txt"
     params:
         path= os.path.dirname(workflow.snakefile)
     shell:
         "snakemake -s {params.path}/rules/mummer.smk "
-        "--config genome_list='{input.genome_list}' "
+        "--config comparison_list='{input.comparison_list}' "
         " genome_folder='{input.genome_folder}' "
         " species={wildcards.species} "
         " genome_stats={input.genome_stats} "

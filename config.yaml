@@ -3,6 +3,9 @@ mash:
    k: 21
    sketch_size: 1e4 # 1e3
    max_dist: 0.2
+mummer:
+  subset_size: 1000
+  max_dist: 0.1
 fastani:
   k: 16
   fragLen: 3000
