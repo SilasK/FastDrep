@@ -44,7 +44,6 @@ ruleorder: decompress_delta>get_deltadir
 def get_merge_mummer_ani_input(wildcards):
 
     subsets=get_mummer_subsets(wildcards)
-    print(subsets)
 
     return expand("mummer/ANI/{subset}.tsv",subset=subsets)
 
@@ -57,7 +56,6 @@ rule merge_mummer_ani:
         import pandas as pd
         Mummer={}
         for file in input:
-            print(input,file)
             Mummer[io.simplify_path(file)]= pd.read_csv(file,index_col=[0,1],sep='\t')
 
         M= pd.concat(Mummer,axis=0)
