@@ -4,7 +4,7 @@ mash:
    sketch_size: 1e4 # 1e3
    max_dist: 0.2
 mummer:
-  subset_size: 200
+  subset_size: 500
   max_dist: 0.1
 fastani:
   k: 16
