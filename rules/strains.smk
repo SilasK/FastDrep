@@ -19,7 +19,7 @@ rule Dstrain:
 def estimate_time_mummer(N,threads):
     "retur time in minutes"
 
-    time_per_mummer_call = 20/60
+    time_per_mummer_call = 1 # min
 
     return int(N*time_per_mummer_call)//threads + 5
 
