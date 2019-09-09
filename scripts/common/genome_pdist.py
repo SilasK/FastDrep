@@ -244,7 +244,7 @@ def pairewise2matrix(M,column='Identity',fillna=np.nan):
     """
 
 
-    ID= Ms[column].unstack()
+    ID= M[column].unstack()
 
     all_indexes= ID.index.union(ID.columns)
 
