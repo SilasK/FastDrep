@@ -17,6 +17,9 @@ if __name__=='__main__':
     M= pd.read_csv(snakemake.input.dists,index_col=[0,1],sep='\t')
     mag2species= pd.read_csv(snakemake.input.mag2species,index_col=0,sep='\t')
 
+    M['Species']= mag2species.loc[M.index.get_level_values(0),'Species']
+    M['Species2']= mag2species.loc[M.index.get_level_values(1),'Species']
+    M= M.query('Species==Species2')
 
     fraction_below_treshold= (M.ANI<treshold).groupby(M.Species).sum() / M.groupby('Species').size()
     have_strain_gap= (fraction_below_treshold >0.05)

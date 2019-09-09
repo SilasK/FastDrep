@@ -10,7 +10,7 @@ from common import genome_pdist as gd
 
 
 
-def automatic_cluster_species(Dist,seed_tresholds= [0.9,0.95],linkage_method='average'):
+def automatic_cluster_species(Dist,seed_tresholds= [0.92,0.97],linkage_method=linkage_method):
 
     linkage = hc.linkage(sp.distance.squareform(Dist), method=linkage_method)
 
@@ -40,7 +40,7 @@ def automatic_cluster_species(Dist,seed_tresholds= [0.9,0.95],linkage_method='av
 
 
 def treshold_based_clustering(Dist,treshold,linkage_method='average'):
-    assert (treshold>0.8)&(treshold<1), "treshold should be between 0.8 and 1 or 'auto', treshold was {treshold}"
+    assert (treshold>0.9)&(treshold<1), "treshold should be between 0.9 and 1 or 'auto', treshold was {treshold}"
     linkage = hc.linkage(sp.distance.squareform(Dist), method=linkage_method)
     labels = hc.fcluster(linkage,(1-treshold),criterion='distance')
     Scores= gd.evaluate_clusters_tresholds([treshold],Dist,linkage_method=linkage_method)
@@ -52,12 +52,11 @@ if __name__=='__main__':
     treshold = snakemake.params.treshold
     quality_score_formula = snakemake.config['quality_score']
 
-    M= gd.load_mash(snakemake.input.dists)
+    Q= gd.load_quality(snakemake.input.quality)
+    quality_score= Q.eval(quality_score_formula)
 
-    ID= M.Identity.unstack()
-    all_index=ID.index.union(ID.columns)
-    ID= ID.reindex(index=all_index,columns=all_index).fillna(0)
-    Dist= 1-ID.fillna(0.8)
+    M= gd.load_mash(snakemake.input.dists)
+    Dist= 1-gd.pairewise2matrix(M,fillna=0.9)
 
 
 
@@ -66,22 +65,27 @@ if __name__=='__main__':
     else:
         Scores, labels = treshold_based_clustering(Dist,treshold,linkage_method=linkage_method)
 
-    print(f"Identified { max(labels)} species")
+
     Scores.to_csv(snakemake.output.scores,sep='\t')
 
 
-    df= pd.DataFrame(index=Dist.index)
-    df.index.name='genome'
-    df['SpeciesNr']= labels
+    mag2Species= pd.DataFrame(index=Q.index,columns=['SpeciesNr','Species'])
+    mag2Species.index.name='genome'
+    mag2Species['SpeciesNr']= labels
 
+    speciesNr= labels.max()
+    missing_species=mag2Species.SpeciesNr.isnull()
+    mag2Species.loc[missing_species,'SpeciesNr']=np.arange(speciesNr+1,
+                                                           speciesNr+1+missing_species.sum())
+
+    print(f"Identified { mag2Species.SpeciesNr.max()} species")
 
     n_leading_zeros= len(str(max(labels)))
-    format_int='Species{:0'+str(n_leading_zeros)+'d}'
+    format_int='sp{:0'+str(n_leading_zeros)+'d}'
     df['Species']=df.SpeciesNr.apply(format_int.format)
 
 
-    Q= gd.load_quality(snakemake.input.quality)
-    quality_score= Q.eval(quality_score_formula)
+
 
     df['Representative_Species']=gd.best_genome_from_table(df.Species,quality_score)
 

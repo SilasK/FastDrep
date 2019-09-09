@@ -233,3 +233,26 @@ def clustermap(DistanceMatrix,linkage_method='average',**kws):
                 )
 
     return cg
+
+def pairewise2matrix(M,column='Identity',fillna=np.nan):
+    """
+        This functions turns a pairewise genome distance table [genome1, genome2, column...]
+        In to a matrix [genome1 genome2] of the values of column.
+        When ANI values are symetrical (with minimal error),
+        usually only one halve of NxN possibilities values are calculated.
+
+
+        Diagonal values are set to 1
+
+    """
+
+
+    ID= M[column].unstack()
+
+    all_indexes= ID.index.union(ID.columns)
+
+    ID=ID.reindex(index=all_indexes,columns=all_indexes)
+    ID=ID.fillna(0)
+    ID= ID+ID.T
+    ID.values[np.eye(ID.shape[0],dtype=bool)]=1
+    return ID.replace(0,fillna)

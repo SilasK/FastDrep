@@ -40,7 +40,7 @@ rule mash_calculate_dist:
 localrules: cluster_species,get_representatives
 checkpoint cluster_species:
     input:
-        dists=rules.mash_calculate_dist.output[0],
+        dists=rules.merge_mummer_ani.output[0],
         quality ="tables/Genome_quality.tsv",
     output:
         cluster_file="tables/mag2species.tsv",
