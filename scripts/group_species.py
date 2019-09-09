@@ -81,7 +81,7 @@ if __name__=='__main__':
     print(f"Identified { mag2Species.SpeciesNr.max()} species")
 
     n_leading_zeros= len(str(max(labels)))
-    format_int='Species{:0'+str(n_leading_zeros)+'d}'
+    format_int='sp{:0'+str(n_leading_zeros)+'d}'
     df['Species']=df.SpeciesNr.apply(format_int.format)
 
 
