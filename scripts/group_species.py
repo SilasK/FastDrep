@@ -10,7 +10,7 @@ from common import genome_pdist as gd
 
 
 
-def automatic_cluster_species(Dist,seed_tresholds= [0.92,0.97],linkage_method=linkage_method):
+def automatic_cluster_species(Dist,seed_tresholds= [0.92,0.97],linkage_method='average'):
 
     linkage = hc.linkage(sp.distance.squareform(Dist), method=linkage_method)
 
