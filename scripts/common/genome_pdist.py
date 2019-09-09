@@ -199,7 +199,10 @@ def group_species_linkage(M,threshold = 0.95,fillna=0.8,linkage_method='average'
 
 def load_quality(checkm_file):
     Q= pd.read_csv(checkm_file, index_col=0,sep='\t')
-    Q= Q.rename(columns={'strain heterogeneity':'strain_heterogeneity'})
+    Q= Q.rename(columns={'Strain heterogeneity':'strain_heterogeneity',
+                         'strain heterogeneity':'strain_heterogeneity',
+                         'Contamination':'contamination',
+                         'Completeness':'completeness'})
     Q.index= Q.index.str.replace('.fasta','')
 
     return Q
