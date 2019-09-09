@@ -100,7 +100,11 @@ def load_mash(dist_file,simplify_names=True):
 
     return F
 
+def load_mummer(dist_file):
 
+    M=pd.read_csv(dist_file,sep='\t',index_col=[0,1])
+    M['Identity']=M.ANI
+    return M
 
 def to_graph(F,attributes=None,**kws):
 

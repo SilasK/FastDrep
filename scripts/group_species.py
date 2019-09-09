@@ -55,7 +55,7 @@ if __name__=='__main__':
     Q= gd.load_quality(snakemake.input.quality)
     quality_score= Q.eval(quality_score_formula)
 
-    M= gd.load_mash(snakemake.input.dists)
+    M= gd.load_mummer(snakemake.input.dists)
     Dist= 1-gd.pairewise2matrix(M,fillna=0.9)
 
 
@@ -71,7 +71,7 @@ if __name__=='__main__':
 
     mag2Species= pd.DataFrame(index=Q.index,columns=['SpeciesNr','Species'])
     mag2Species.index.name='genome'
-    mag2Species['SpeciesNr']= labels
+    mag2Species.loc[labels.index,'SpeciesNr']= labels
 
     speciesNr= labels.max()
     missing_species=mag2Species.SpeciesNr.isnull()
