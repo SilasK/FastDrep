@@ -77,6 +77,33 @@ else:
                            os.path.join(output[0],f))
 
 
+localrules: get_predifined_quality, combine_checkm_quality
+ruleorder: get_predifined_quality> combine_checkm_quality
+rule get_predifined_quality:
+    input:
+        config['genome_qualities']
+    output:
+        "filter/Genome_quality.tsv"
+    shell:
+        "cp {input} {output}"
+
+
+checkpoint get_subsets_for_checkm:
+    input:
+        rules.filter_genomes_by_size.output[0]
+    output:
+        directory(temp("filter/subsets_bins"))
+
+rule run_checkm:
+    shell:
+
+
+rule combine_checkm_quality:
+
+    output:
+        "filter/Genome_quality.tsv"
+
+
 
 
     rule filter_genomes_by_quality:
