@@ -27,24 +27,71 @@ rule calculate_stats:
 if config.get('skip_filter',False):
     filter_genome_folder= input_genome_folder
 else:
-    filter_genome_folder='filtered_bins'
+    filter_genome_folder='bins/filtered_quality'
 
-    localrules: filter_genomes
-    rule filter_genomes:
+
+
+
+    localrules: filter_genomes_by_size, filter_genomes_by_quality,get_orig_filenames
+
+    rule get_orig_filenames:
+        input:
+            dir=input_genome_folder
+        output:
+            "tables/bin2filename.tsv"
+        run:
+            import pandas as pd
+            filenames= pd.Series(os.listdir(input.dir),name='Filename')
+            filenames.index= filenames.apply(lambda f: os.path.splitext(f)[0])
+
+            filenames.index.name='Bin'
+
+            filenames.to_csv(output[0],sep='\t',header=True)
+
+
+    rule filter_genomes_by_size:
         input:
             dir=os.path.abspath(input_genome_folder),
-            quality=config['genome_qualities'],
-            genome_stats= rules.calculate_stats.output[0]
+            genome_stats= rules.calculate_stats.output[0],
+            filenames= rules.get_orig_filenames.output[0]
         output:
-            directory(filter_genome_folder)
+            directory(temp('bins/filtered_size'))
         params:
-            quality_filter=config['qualityfilter_criteria'],
             genome_filter=config['filter_criteria']
-
         run:
             import pandas as pd
 
             genome_stats= pd.read_csv(input.genome_stats,index_col=0,sep='\t')
+            filenames= pd.read_csv(input.filenames,index_col=0,sep='\t',squeeze=True)
+
+
+
+            filtered=  filenames.loc[genome_stats.query(params.genome_filter).index]
+
+            if filtered.shape[0]<2:
+                raise Exception("Less than 2 genomes pass fragementation filter")
+
+            os.makedirs(output[0])
+            for f in filtered.values:
+                os.symlink(os.path.join(input.dir,f),
+                           os.path.join(output[0],f))
+
+
+
+
+    rule filter_genomes_by_quality:
+        input:
+            filtered_dir= rules.filter_genomes_by_size.output[0],
+            dir= os.path.abspath(input_genome_folder),
+            quality=config['genome_qualities'],
+        output:
+            directory(filter_genome_folder)
+        params:
+            quality_filter=config['qualityfilter_criteria'],
+        run:
+            import pandas as pd
+
+
             Q= gd.load_quality(input.quality)
             assert not Q.index.duplicated().any(), f"duplicated indexes in {input.quality}"
 
@@ -52,7 +99,7 @@ else:
 
 
 
-            files_in_folder= pd.Series(os.listdir(input.dir))
+            files_in_folder= pd.Series(os.listdir(input.filtered_dir))
 
             files_in_folder.index= files_in_folder.apply(lambda f: os.path.splitext(f)[0])
 
@@ -66,13 +113,10 @@ else:
             if len(missing_fasta) >0:
                 logger.error(f"missing fasta file for following genomes: {missing_fasta}")
 
-            Q=Q.join(genome_stats)
 
             Q= Q.loc[intersection]
 
-
-
-            filtered=  files_in_folder.loc[Q.query(params.genome_filter).query(params.quality_filter).index]
+            filtered=  files_in_folder.loc[Q.query(params.quality_filter).index]
 
 
             if filtered.shape[0]<2:
