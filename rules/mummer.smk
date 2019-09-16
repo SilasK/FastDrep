@@ -1,9 +1,12 @@
 from os import path
 from itertools import combinations
 
-genomes= open(config['genome_list']).read().strip().replace('.fasta','').split()
+
+with open(config['comparison_list']) as f:
+    comparisons= [line.strip().split() for line in f]
+
 genome_folder= config['genome_folder']
-species= config['species']
+subset= config['subset']
 genome_stats= config['genome_stats']
 
 assert (path.isdir(genome_folder) & path.exists(genome_folder))
@@ -11,7 +14,7 @@ assert (path.isdir(genome_folder) & path.exists(genome_folder))
 
 rule all:
     input:
-        f"mummer/ANI/{species}.tsv"
+        f"mummer/ANI/{subset}.tsv"
 
 
 rule run_mummer:
@@ -72,9 +75,9 @@ rule parse_delta:
 
 rule combine:
     input:
-        ["mummer/delta/{}-{}.txt".format(*pair) for pair in combinations(genomes,2)]
+        ["mummer/delta/{}-{}.txt".format(*pair) for pair in comparisons]
     output:
-        temp(f"mummer/ANI/{species}.txt")
+        temp(f"mummer/ANI/{subset}.txt")
     run:
         with open(output[0], "w") as fout:
             for f in input:
@@ -87,7 +90,7 @@ rule calculate_ANI:
         alignments=rules.combine.output[0],
         genome_stats= genome_stats
     output:
-        f"mummer/ANI/{species}.tsv"
+        f"mummer/ANI/{subset}.tsv"
     run:
         import pandas as pd
 

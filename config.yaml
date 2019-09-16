@@ -3,6 +3,9 @@ mash:
    k: 21
    sketch_size: 1e4 # 1e3
    max_dist: 0.2
+mummer:
+  subset_size: 500
+  max_dist: 0.1
 fastani:
   k: 16
   fragLen: 3000
@@ -13,7 +16,7 @@ bbsketch:
     k: "9,12"
   nt:
     k: "31,24"
-species_treshold: 'auto' # ]0.8-1[ or 'auto' / auto detects best treshold in range [0.9,0.95]
+species_treshold: 'auto' # ]0.9-1[ or 'auto' / auto detects best treshold in range [0.92,0.97]
 genome_folder: 'all_bins'
 genome_qualities: 'Checkm_quality_allbins.tsv'
 quality_score: 'completeness-5*contamination-0.5*strain_heterogeneity'

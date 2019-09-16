@@ -1,127 +1,98 @@
 
-rule Dstrain:
-    input:
-        ANI="tables/dist_strains.tsv",
-        ani_dir='mummer/ANI',
-        delta_dir="mummer/delta"
-    output:
-        "mummer/delta.tar.gz"
-    shell:
-        " tar -czf {input.delta_dir}.tar.gz {input.delta_dir} ;"
-        "rm -rf {input.delta_dir} {input.ani_dir}"
 
 
-localrules: species_subsets
-checkpoint species_subsets:
-    input:
-        cluster_file=rules.cluster_species.output.cluster_file,
-    output:
-        subsets_dir= temp(directory("mummer/subsets"))
-    run:
-        import pandas as pd
-        labels= pd.read_csv(input[0],sep='\t',index_col=0).Species
-
-
-        os.makedirs(output.subsets_dir)
-
-        for species in labels.unique():
-
-            genomes_of_cluster= labels.index[labels==species].values
-            if len(genomes_of_cluster)>1:
-
-                with open(f"{output.subsets_dir}/{species}.txt","w") as f:
-
-                    f.write(''.join([g+'.fasta\n' for g in genomes_of_cluster ]))
-
-
-def get_species_for_sub_clustering(wildcards):
-    import pandas as pd
-    subset_dir= checkpoints.species_subsets.get() # subsetdir must be present
-    cluster_file=checkpoints.cluster_species.get().output.cluster_file
-
-    df= pd.read_csv(cluster_file,sep='\t',index_col=0)
-
-    Nspecies= df.groupby('Species').size()
-
-
-    return list(Nspecies.index[Nspecies>1])
-
-
-
-def estimate_time_mummer(input,threads):
+def estimate_time_mummer(N,threads):
     "retur time in minutes"
 
-    N= len(open(input.genome_list).read().split())
+    time_per_mummer_call = 1 # min
 
-    time_per_mummer_call = 10/60
-
-    return int(N**2/2*time_per_mummer_call + N/2)//threads + 5
-
-localrules: get_deltadir,decompress_delta,Dstrain
-rule get_deltadir:
-    output:
-        directory("mummer/delta")
-    run:
-        os.makedirs(output[0])
-
-rule decompress_delta:
-    input:
-        ancient("mummer/delta.tar.gz")
-    output:
-        directory("mummer/delta")
-    shell:
-        "tar -xzf {input}"
-ruleorder: decompress_delta>get_deltadir
-
-
-rule merge_mummer_ani:
-    input:
-        lambda wc: expand("mummer/ANI/{species}.tsv",species=get_species_for_sub_clustering(wc))
-    output:
-        "tables/dist_strains.tsv"
-    run:
-        import pandas as pd
-        Mummer={}
-        for file in input:
-            Mummer[io.simplify_path(file)]= pd.read_csv(file,index_col=[0,1],sep='\t')
-
-        M= pd.concat(Mummer,axis=0)
-        M['Species']=M.index.get_level_values(0)
-        M.index= M.index.droplevel(0)
-        M.to_csv(output[0],sep='\t')
-
-        #sns.jointplot('ANI','Coverage',data=M.query('ANI>0.98'),kind='hex',gridsize=100,vmax=200)
-
+    return int(N*time_per_mummer_call)//threads + 5
 
 
 
 rule run_mummer:
     input:
-        genome_list="mummer/subsets/{species}.txt",
+        comparison_list="mummer/subsets/{subset}.txt",
         genome_folder= genome_folder,
         genome_stats="tables/genome_stats.tsv",
-        delta_dir="mummer/delta"
     output:
-        temp("mummer/ANI/{species}.tsv")
+        temp("mummer/ANI/{subset}.tsv")
     threads:
         config['threads']
     conda:
         "../envs/mummer.yaml"
     resources:
-        time= lambda wc, input, threads: estimate_time_mummer(input,threads),
+        time= lambda wc, input, threads: estimate_time_mummer(config['mummer']['subset_size'],threads),
         mem= 2
     log:
-        "logs/mummer/workflows/{species}.txt"
+        "logs/mummer/workflows/{subset}.txt"
     params:
         path= os.path.dirname(workflow.snakefile)
     shell:
         "snakemake -s {params.path}/rules/mummer.smk "
-        "--config genome_list='{input.genome_list}' "
+        "--config comparison_list='{input.comparison_list}' "
         " genome_folder='{input.genome_folder}' "
-        " species={wildcards.species} "
+        " subset={wildcards.subset} "
         " genome_stats={input.genome_stats} "
         " --rerun-incomplete "
         "-j {threads} --nolock 2> {log}"
+
+
+
+def get_merge_mummer_ani_input(wildcards):
+
+    subsets=get_mummer_subsets(wildcards)
+
+    return expand("mummer/ANI/{subset}.tsv",subset=subsets)
+
+localrules: merge_mummer_ani
+rule merge_mummer_ani:
+    input:
+        get_merge_mummer_ani_input
+    output:
+        "tables/mummer_dist.tsv"
+    run:
+        import pandas as pd
+        import shutil
+
+        Mummer={}
+        for file in input:
+            Mummer[io.simplify_path(file)]= pd.read_csv(file,index_col=[0,1],sep='\t')
+
+        M= pd.concat(Mummer,axis=0)
+        M.index= M.index.droplevel(0)
+        M.to_csv(output[0],sep='\t')
+
+
+        ani_dir= os.path.dirname(input[0])
+        shutil.rmtree(ani_dir)
+        #sns.jointplot('ANI','Coverage',data=M.query('ANI>0.98'),kind='hex',gridsize=100,vmax=200)
+
+
+
+localrules: cluster_species,get_representatives
+checkpoint cluster_species:
+    input:
+        dists=rules.merge_mummer_ani.output[0],
+        quality ="tables/Genome_quality.tsv",
+    output:
+        cluster_file="tables/mag2species.tsv",
+        scores="tables/evaluation_species_clustering.tsv"
+    params:
+        treshold=config['species_treshold'],
+        linkage_method=config.get('linkage_method','average'),
+    script:
+        "../scripts/group_species.py"
+
+
+def get_species(wildcards):
+    import pandas as pd
+    cluster_file=checkpoints.cluster_species.get().output.cluster_file
+
+    df= pd.read_csv(cluster_file,sep='\t',index_col=0)
+    return list(df.Species.unique())
+
+
 
 
 localrules: cluster_strains
@@ -137,6 +108,55 @@ checkpoint cluster_strains:
         linkage_method=config.get('linkage_method','average'),
     script:
         "../scripts/group_strains.py"
+
+
+def get_representative_mapping(cluster_file,resolution_level):
+    import pandas as pd
+    df= pd.read_csv(cluster_file,sep='\t')
+
+    if resolution_level=='species':
+        rep= "Representative_Species"
+    elif resolution_level=='strains':
+        rep= "Representative_Strain"
+    else: raise Exception(f"taxrank should be strains or species got {resolution_level} ")
+
+    return df[rep]
+
+
+def get_representatives(wildcards):
+    import pandas as pd
+
+    resolution_level= wildcards.resolution_level
+
+    if resolution_level=='species':
+
+        cluster_file=checkpoints.cluster_species.get().output.cluster_file
+    elif resolution_level=='strains':
+        cluster_file=checkpoints.cluster_strains.get().output.cluster_file
+
+    mapping= get_representative_mapping(cluster_file, resolution_level)
+
+    return list(mapping.unique())
+
+
+checkpoint get_representatives:
+    input:
+        dir= genome_folder,
+        cluster_file= "tables/mag2{resolution_level}.tsv"
+    output:
+        dir= directory("representatives/{resolution_level}"),
+    run:
+        mapping = get_representative_mapping(input.cluster_file,wildcards.resolution_level)
+
+        output_dir = output.dir
+        os.makedirs(output_dir)
+        input_dir= os.path.relpath(input.dir,start=output_dir)
+
+        for genome in mapping.unique():
+            os.symlink(os.path.join(input_dir,genome+'.fasta'),
+                       os.path.join(output_dir,genome+'.fasta')
+                   )
+
 
 
 checkpoint get_ref_bbsplit:
