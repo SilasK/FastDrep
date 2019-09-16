@@ -3,7 +3,7 @@ rule calculate_stats:
     input:
         input_genome_folder,
     output:
-        "tables/inputgenome_stats.tsv"
+        "filter/genome_stats.tsv"
     threads:
         10
     run:
@@ -27,7 +27,7 @@ rule calculate_stats:
 if config.get('skip_filter',False):
     filter_genome_folder= input_genome_folder
 else:
-    filter_genome_folder='bins/filtered_quality'
+    filter_genome_folder='filter/bins_filtered_quality'
 
 
 
@@ -38,7 +38,7 @@ else:
         input:
             dir=input_genome_folder
         output:
-            "tables/bin2filename.tsv"
+            "filter/bin2filename.tsv"
         run:
             import pandas as pd
             filenames= pd.Series(os.listdir(input.dir),name='Filename')
@@ -55,7 +55,7 @@ else:
             genome_stats= rules.calculate_stats.output[0],
             filenames= rules.get_orig_filenames.output[0]
         output:
-            directory(temp('bins/filtered_size'))
+            directory(temp('filter/bins_filtered_size'))
         params:
             genome_filter=config['filter_criteria']
         run:
@@ -138,17 +138,17 @@ def gen_names_for_range(N,prefix='',start=1):
 
 genome_folder='mags'
 
-localrules: rename_genomes, decompress_genomes
+localrules: rename_genomes, decompress_genomes, rename_quality
 checkpoint rename_genomes:
     input:
         genome_folder= filter_genome_folder,
-        stats="tables/inputgenome_stats.tsv",
-        quality=config['genome_qualities']
+        stats= rules.calculate_stats.output[0],
+
     output:
         genome_folder= directory(genome_folder),
         mapping= "tables/renamed_genomes.tsv",
         stats="tables/genome_stats.tsv",
-        quality="tables/Genome_quality.tsv"
+
     run:
 
         import pandas as pd
@@ -170,9 +170,7 @@ checkpoint rename_genomes:
         Stats= Stats.rename(index=Mapping.Genome).loc[Mapping.Genome]
         Stats.to_csv(output.stats,sep='\t')
 
-        Q= gd.load_quality(input.quality)
-        Q= Q.rename(index=Mapping.Genome).loc[Mapping.Genome]
-        Q.to_csv(output.quality,sep='\t')
+
 
 
         os.makedirs(output.genome_folder)
@@ -182,6 +180,23 @@ checkpoint rename_genomes:
             shutil.copy(row.Original_fasta,
                         os.path.join(output.genome_folder,row.Genome+'.fasta')
                         )
+
+rule rename_quality:
+    input:
+        mapping= rules.rename_genomes.output.mapping,
+        quality=config['genome_qualities']
+    output:
+        quality="tables/Genome_quality.tsv"
+
+    run:
+        import pandas as pd
+
+        Mapping= pd.read_csv(input.mapping,sep='\t',index_col=0)
+
+        Q= gd.load_quality(input.quality)
+        Q= Q.rename(index=Mapping.Genome).loc[Mapping.Genome]
+        Q.to_csv(output.quality,sep='\t')
+
 
 
 rule decompress_genomes:
