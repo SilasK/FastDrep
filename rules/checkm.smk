@@ -1,8 +1,12 @@
-DBDIR = os.path.realpath(config["database_dir"])
+
+if not database_dir in config:
+    raise Exception("Expect to find a path to the 'database_dir' in the config")
+
+BDIR = os.path.realpath(config["database_dir"]))
 CHECKMDIR = os.path.join(DBDIR, "checkm")
 CHECKM_ARCHIVE = "checkm_data_v1.0.9.tar.gz"
-CONDAENV='envs'
-CHECKM_init_flag= os.path.join(CHECKM_ARCHIVE,'init.txt')
+
+CHECKM_init_flag= os.path.join(CHECKMDIR,'init.txt')
 
 import os
 from glob import glob
@@ -42,7 +46,7 @@ rule run_checkm_lineage_wf:
         output_dir = lambda wc, output: os.path.dirname(output[0]),
         bin_dir= lambda wc, input: os.path.dirname(input.bins[0]),
     conda:
-        "%s/checkm.yaml" % CONDAENV
+        "../envs/checkm.yaml"
     threads:
         config.get("threads", 1)
     shell:
@@ -119,20 +123,17 @@ rule initialize_checkm:
     input:
         ancient(CHECKMFILES)
     output:
-        touched_output = CHECKM_init_flag
+        touched_output = touch(CHECKM_init_flag)
     params:
         database_dir = CHECKMDIR,
-        script_dir = os.path.dirname(os.path.abspath(workflow.snakefile))
     conda:
-        "%s/checkm.yaml" % CONDAENV
+        "../envs/checkm.yaml"
     log:
         "logs/initialize_checkm.log"
     shell:
         """
-        python {params.script_dir}/rules/initialize_checkm.py \
-            {params.database_dir} \
-            {output.touched_output} \
-            {log}
+            checkm data setRoot {params.database_dir} 2> {log}
+
         """
 
 
@@ -146,7 +147,7 @@ rule initialize_checkm:
 #     log:
 #         "checkm/tetra.txt"
 #     conda:
-#         "%s/checkm.yaml" % CONDAENV
+#         "../envs/checkm.yaml"
 #     threads:
 #         config.get("threads", 8)
 #     shell:
@@ -171,7 +172,7 @@ rule initialize_checkm:
 #     log:
 #         "logs/checkm/outliers.txt"
 #     conda:
-#         "%s/checkm.yaml" % CONDAENV
+#         "../envs/checkm.yaml"
 #     threads:
 #         config.get("threads", 8)
 #     shell:
@@ -203,7 +204,7 @@ rule initialize_checkm:
 #         evalue = 1e-05,
 #         concatenate = 200 #concatenate hits that are within the specified number of base pairs
 #     conda:
-#         "%s/checkm.yaml" % CONDAENV
+#         "../envs/checkm.yaml"
 #     threads:
 #         1
 #     shell:
