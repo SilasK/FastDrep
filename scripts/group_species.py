@@ -71,7 +71,7 @@ if __name__=='__main__':
 
     mag2Species= pd.DataFrame(index=Q.index,columns=['SpeciesNr','Species'])
     mag2Species.index.name='genome'
-    mag2Species.loc[labels.index,'SpeciesNr']= labels
+    mag2Species.loc[Dist.index,'SpeciesNr']= labels
 
     speciesNr= labels.max()
     missing_species=mag2Species.SpeciesNr.isnull()
@@ -82,11 +82,11 @@ if __name__=='__main__':
 
     n_leading_zeros= len(str(max(labels)))
     format_int='sp{:0'+str(n_leading_zeros)+'d}'
-    df['Species']=df.SpeciesNr.apply(format_int.format)
+    mag2Species['Species']=mag2Species.SpeciesNr.apply(format_int.format)
 
 
 
 
-    df['Representative_Species']=gd.best_genome_from_table(df.Species,quality_score)
+    mag2Species['Representative_Species']=gd.best_genome_from_table(mag2Species.Species,quality_score)
 
-    df.to_csv(snakemake.output.cluster_file,sep='\t')
+    mag2Species.to_csv(snakemake.output.cluster_file,sep='\t')
