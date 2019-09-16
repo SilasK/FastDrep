@@ -148,6 +148,8 @@ checkpoint rename_genomes:
         genome_folder= directory(genome_folder),
         mapping= "tables/renamed_genomes.tsv",
         stats="tables/genome_stats.tsv",
+    params:
+        prefix= config.get('mag_prefix','MAG')
 
     run:
 
@@ -162,7 +164,7 @@ checkpoint rename_genomes:
         Mapping.index.name='Original'
         Mapping.sort_index(inplace=True)
 
-        Mapping['Genome']= gen_names_for_range(Mapping.shape[0],"MAG")
+        Mapping['Genome']= gen_names_for_range(Mapping.shape[0],params.prefix)
         Mapping.to_csv(output.mapping,sep='\t')
 
         #Rename stats
