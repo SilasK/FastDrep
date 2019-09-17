@@ -88,21 +88,6 @@ rule get_predifined_quality:
         "cp {input} {output}"
 
 
-checkpoint get_subsets_for_checkm:
-    input:
-        rules.filter_genomes_by_size.output[0]
-    output:
-        directory(temp("filter/subsets_bins"))
-
-rule run_checkm:
-    shell:
-
-
-rule combine_checkm_quality:
-
-    output:
-        "filter/Genome_quality.tsv"
-
 
 
 

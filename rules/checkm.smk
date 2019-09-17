@@ -33,6 +33,52 @@ rule all:
 
 
 
+checkpoint get_subsets_for_checkm:
+    input:
+        dir=genome_folder
+    output:
+        dir=directory(temp("{checkm_dir}/subsets"))
+    params:
+        subset_size=500
+    run:
+
+        for i,f in enumerate():
+
+        files= os.listdir(input.dir)
+        n=1
+
+
+
+            n= i % params.subset_size
+
+            output_dir= os.path.join(output.dir,f'subset{n:d}')
+            os.path.makedirs(output_dir)
+            def symlink(files,input_dir,output_dir):
+                """create symlink with and adjust for relative path"""
+
+
+            input_dir_rel= os.path.relpath(input.dir, output_dir)
+
+            for f in files:
+                os.symlink(os.path.join(input_dir_rel,f),
+                           os.path.join(output_dir,f))
+
+
+rule run_checkm:
+    shell:
+
+
+rule combine_checkm_quality:
+
+    output:
+        "filter/Genome_quality.tsv"
+
+
+
+
+
+
+
 rule download:
     output:
         touch(f'{DBDIR}/checkm_downloaded'),
