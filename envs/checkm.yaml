@@ -4,7 +4,4 @@ channels:
     - defaults
 dependencies:
     - checkm-genome=1.0.18
-    - python=2
-    - hmmer>=3.1b1
-    - prodigal>=2.6.1
-    - pplacer>=1.1
+    - python=2.7

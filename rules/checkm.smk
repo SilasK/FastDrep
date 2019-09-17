@@ -22,60 +22,43 @@ def md5(fname):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
-genome_folder=config['genome_folder']
-checkm_dir= config.get('checkm_dir','checkm')
-CHECKM_init_flag= os.path.join(checkm_dir,'init.txt')
+def symlink_relative(files,input_dir,output_dir):
+    """create symlink with and adjust for relative path"""
 
-rule all:
-    input:
-        expand("{checkm_dir}/checkm/{file}",checkm_dir=checkm_dir,
-               file=['taxonomy.tsv',"completeness.tsv","storage/tree/concatenated.fasta"])
+
+    input_dir_rel= os.path.relpath(input.dir, output_dir)
+
+    for f in files:
+        os.symlink(os.path.join(input_dir_rel,f),
+                   os.path.join(output_dir,f))
+
+bin_folder='filter/bins_filtered_size' #config['bin_folder']
+CHECKM_init_flag= 'checkm/init.txt'
+# 
+# rule all:
+#      input:
+#          checkm="filter/Genome_quality.tsv",
+#          markers= "filter/checkm_markers.fasta"
+
 
 
 
 checkpoint get_subsets_for_checkm:
     input:
-        dir=genome_folder
+        dir=bin_folder
     output:
-        dir=directory(temp("{checkm_dir}/subsets"))
+        dir=directory(temp(f"checkm/subsets"))
     params:
-        subset_size=500
+        subset_size=100
     run:
-
-        for i,f in enumerate():
-
         files= os.listdir(input.dir)
-        n=1
 
-
-
-            n= i % params.subset_size
-
+        N_subsets= len(files)//params.subset_size + 1
+        for n in range(N_subsets):
             output_dir= os.path.join(output.dir,f'subset{n:d}')
             os.path.makedirs(output_dir)
-            def symlink(files,input_dir,output_dir):
-                """create symlink with and adjust for relative path"""
-
-
-            input_dir_rel= os.path.relpath(input.dir, output_dir)
-
-            for f in files:
-                os.symlink(os.path.join(input_dir_rel,f),
-                           os.path.join(output_dir,f))
-
-
-rule run_checkm:
-    shell:
-
-
-rule combine_checkm_quality:
-
-    output:
-        "filter/Genome_quality.tsv"
-
-
-
-
+            subset_files=files[n*params.subset_size: min((n+1)*params.subset_size,len(files))]
+            symlink_relative(subset_files,input.dir,output_dir)
 
 
 
@@ -100,19 +83,21 @@ rule download:
 rule run_checkm_lineage_wf:
     input:
         touched_output = CHECKM_init_flag,
-        bin_dir = genome_folder
+        bin_dir = "checkm/subsets/{subset}"
     output:
-        "{checkm_dir}/completeness.tsv",
-        "{checkm_dir}/storage/tree/concatenated.fasta"
+        "checkm/results/{subset}/completeness.tsv",
+        "checkm/results/{subset}/storage/tree/concatenated.fasta"
     conda:
         "../envs/checkm.yaml"
     threads:
         config.get("threads",8)
+    params:
+        checkm_dir= lambda wc,output: os.dirname(output[0])
     log:
-        "{checkm_dir}/logs/lineage_wf.txt"
+        "checkm/logs/{subset}/lineage_wf.txt"
     shell:
         """
-        rm -r {wildcards.checkm_dir} ;
+        rm -r {params.checkm_dir} ;
         checkm lineage_wf \
             --file {output[0]} \
             --tab_table \
@@ -120,32 +105,71 @@ rule run_checkm_lineage_wf:
             --extension fasta \
             --threads {threads} \
             {input.bin_dir} \
-            {wildcards.checkm_dir} 2> {log}
+            {params.checkm_dir} 2> {log}
         """
 
 
 
 rule run_checkm_tree_qa:
     input:
-        tree="{checkm_dir}/completeness.tsv"
+        tree=rules.run_checkm_lineage_wf.output[0]
     output:
-        "{checkm_dir}/taxonomy.tsv",
+        "checkm/results/{subset}/taxonomy.tsv",
     conda:
         "../envs/checkm.yaml"
     threads:
         1
     log:
-        "{checkm_dir}/logs/tree_qa.txt"
+        "checkm/logs/{subset}/tree_qa.txt"
+    params:
+        checkm_dir= lambda wc,output: os.dirname(output[0])
     shell:
         """
             checkm tree_qa \
-               {wildcards.checkm_dir} \
+               {params.checkm_dir} \
                --out_format 4 \
                --file {output[0]} 2> {log}
 
         """
 
 
+def get_subsets(wildcards):
+
+    subset_folder= checkpoints.get_subsets_for_checkm.get(**wildcards).output[0]
+
+    subsets = glob_wildcards(os.path.join(subset_folder,"{subset}")).subsets
+
+    return subsets
+
+
+rule merge_checkm:
+    input:
+        completeness= lambda wc: expand("checkm/results/{subset}/completeness.tsv",
+               subset= get_subsets(wc)),
+        taxonomy= lambda wc: expand("checkm/results/{subset}/taxonomy.tsv",
+               subset= get_subsets(wc)),
+        markers= lambda wc: expand("checkm/results/{subset}/storage/tree/concatenated.fasta",
+               subset= get_subsets(wc))
+    output:
+        checkm="filter/Genome_quality.tsv",
+        markers= "filter/checkm_markers.fasta"
+    run:
+
+        import pandas as pd
+        import shutil
+        D=[]
+
+        for i in range(len(SAMPLES)):
+            df= pd.read_csv(input.completeness[i],index_col=0,sep='\t')
+            df= df.join(pd.read_csv(input.taxonomy[i],index_col=0,sep='\t'))
+            D.append(df)
+
+        D= pd.concat(D,axis=0)
+        D.to_csv(output.checkm,sep='\t')
+
+        with open(output.markers,'wb') as fout:
+            for fasta in input.markers:
+                shutil.copyfileobj(open(fasta,'rb'),fout)
 
 
 

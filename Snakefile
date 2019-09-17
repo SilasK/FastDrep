@@ -14,7 +14,7 @@ from common import io
 
 
 
-
+include: "rules/checkm.smk"
 include: "rules/filter.smk"
 include: "rules/fastani.smk"
 include: "rules/mash.smk"

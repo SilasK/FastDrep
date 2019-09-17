@@ -77,8 +77,8 @@ else:
                            os.path.join(output[0],f))
 
 
-    localrules: get_predifined_quality, combine_checkm_quality
-    ruleorder: get_predifined_quality> combine_checkm_quality
+    localrules: get_predifined_quality
+    ruleorder: get_predifined_quality> merge_checkm
     rule get_predifined_quality:
         input:
             config['genome_qualities']
