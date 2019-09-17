@@ -12,9 +12,9 @@ rule bbsketch:
         name0="{genome}"
     resources:
         mem= 1,
-        #time= 5
-    group:
-        "bbsketch"
+        time= 5
+    # group:
+    #     "bbsketch"
     log:
         "logs/bbsketch/sketch_{NTorAA}/{genome}.log"
     conda:
@@ -33,6 +33,8 @@ rule mergesketch:
     wildcard_constraints:
         NTorAA="(aa|nt)",
         resolution_level="(species|strains)"
+    # group:
+    #     "bbsketch"
     output:
         out="bbsketch/{resolution_level}_{NTorAA}.sketch.gz"
     threads:
@@ -57,6 +59,8 @@ rule mergesketch_mags:
         NTorAA="(aa|nt)",
     output:
         out="bbsketch/mags_{NTorAA}.sketch.gz"
+    group:
+        "bbsketch"
     threads:
         1
     run:
