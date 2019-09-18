@@ -34,14 +34,14 @@ def symlink_relative(files,input_dir,output_dir):
 
 bin_folder='filter/bins_filtered_size' #config['bin_folder']
 CHECKM_init_flag= 'checkm/init.txt'
-# 
+#
 # rule all:
 #      input:
 #          checkm="filter/Genome_quality.tsv",
 #          markers= "filter/checkm_markers.fasta"
 
 
-
+localrules: get_subsets_for_checkm, merge_checkm
 
 checkpoint get_subsets_for_checkm:
     input:
