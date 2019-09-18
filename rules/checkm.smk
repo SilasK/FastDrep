@@ -144,11 +144,11 @@ def get_subsets(wildcards):
 
 rule merge_checkm:
     input:
-        completeness= lambda wc: expand("checkm/results/{subset}/completeness.tsv",
+        completeness= lambda wc: expand(rules.run_checkm_lineage_wf.output[0],
                subset= get_subsets(wc)),
-        taxonomy= lambda wc: expand("checkm/results/{subset}/taxonomy.tsv",
+        taxonomy= lambda wc: expand(rules.run_checkm_tree_qa.output[0],
                subset= get_subsets(wc)),
-        markers= lambda wc: expand("checkm/results/{subset}/storage/tree/concatenated.fasta",
+        markers= lambda wc: expand(rules.run_checkm_lineage_wf.output[1],
                subset= get_subsets(wc))
     output:
         checkm="filter/Genome_quality.tsv",
