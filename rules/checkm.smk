@@ -49,7 +49,7 @@ checkpoint get_subsets_for_checkm:
     output:
         dir=directory(temp(f"checkm/subsets"))
     params:
-        subset_size=500
+        subset_size=100
     run:
         files= os.listdir(input.dir)
 
@@ -90,8 +90,6 @@ rule run_checkm:
         "../envs/checkm.yaml"
     threads:
         config.get("threads",8)
-    params:
-        checkm_dir= lambda wc,output: os.dirname(output[0])
     log:
         "checkm/logs/{subset}.txt"
     shell:
@@ -114,19 +112,20 @@ rule run_checkm:
         """
 
 
-def get_subsets(wildcards):
+def get_subsets_results_dir(wildcards):
 
     subset_folder= checkpoints.get_subsets_for_checkm.get(**wildcards).output[0]
 
     subsets = glob_wildcards(os.path.join(subset_folder,"{subset}")).subset
+    checkmdirs= expand(rules.run_checkm.output[0],
+           subset= subsets)
 
-    return subsets
+    return checkmdirs
 
 
 rule merge_checkm:
     input:
-        checkmdirs= lambda wc: expand(rules.run_checkm.output[0],
-               subset= get_subsets(wc))
+        checkmdirs= get_subsets_results_dir
     output:
         checkm="filter/Genome_quality.tsv",
         markers= "filter/checkm_markers.fasta"
