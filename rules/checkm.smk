@@ -137,7 +137,7 @@ def get_subsets(wildcards):
 
     subset_folder= checkpoints.get_subsets_for_checkm.get(**wildcards).output[0]
 
-    subsets = glob_wildcards(os.path.join(subset_folder,"{subset}")).subsets
+    subsets = glob_wildcards(os.path.join(subset_folder,"{subset}")).subset
 
     return subsets
 

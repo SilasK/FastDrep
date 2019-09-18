@@ -24,4 +24,4 @@ qualityfilter_criteria: 'quality_score>=50' # use "quality_score" for the above 
 filter_criteria: "N50>5000"
 mag_prefix: "MAG"
 
-database_dir: "databses"
+# database_dir: "databases"
