@@ -49,7 +49,7 @@ checkpoint get_subsets_for_checkm:
     output:
         dir=directory(temp(f"checkm/subsets"))
     params:
-        subset_size=100
+        subset_size=500
     run:
         files= os.listdir(input.dir)
 
