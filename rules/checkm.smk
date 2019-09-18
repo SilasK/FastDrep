@@ -56,7 +56,7 @@ checkpoint get_subsets_for_checkm:
         N_subsets= len(files)//params.subset_size + 1
         for n in range(N_subsets):
             output_dir= os.path.join(output.dir,f'subset{n:d}')
-            os.path.makedirs(output_dir)
+            os.makedirs(output_dir)
             subset_files=files[n*params.subset_size: min((n+1)*params.subset_size,len(files))]
             symlink_relative(subset_files,input.dir,output_dir)
 
