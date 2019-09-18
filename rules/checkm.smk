@@ -80,13 +80,12 @@ rule download:
 
 
 
-rule run_checkm_lineage_wf:
+rule run_checkm:
     input:
         touched_output = CHECKM_init_flag,
         bin_dir = "checkm/subsets/{subset}"
     output:
-        "checkm/results/{subset}/completeness.tsv",
-        "checkm/results/{subset}/storage/tree/concatenated.fasta"
+        directory("checkm/results/{subset}"),
     conda:
         "../envs/checkm.yaml"
     threads:
@@ -94,41 +93,23 @@ rule run_checkm_lineage_wf:
     params:
         checkm_dir= lambda wc,output: os.dirname(output[0])
     log:
-        "checkm/logs/{subset}/lineage_wf.txt"
+        "checkm/logs/{subset}.txt"
     shell:
         """
-        rm -r {params.checkm_dir} ;
+        rm -r {output} ;
         checkm lineage_wf \
-            --file {output[0]} \
+            --file {output[0]}/completeness.tsv \
             --tab_table \
             --quiet \
             --extension fasta \
             --threads {threads} \
             {input.bin_dir} \
-            {params.checkm_dir} 2> {log}
-        """
+            {output[0]} 2> {log}
 
-
-
-rule run_checkm_tree_qa:
-    input:
-        tree=rules.run_checkm_lineage_wf.output[0]
-    output:
-        "checkm/results/{subset}/taxonomy.tsv",
-    conda:
-        "../envs/checkm.yaml"
-    threads:
-        1
-    log:
-        "checkm/logs/{subset}/tree_qa.txt"
-    params:
-        checkm_dir= lambda wc,output: os.dirname(output[0])
-    shell:
-        """
             checkm tree_qa \
-               {params.checkm_dir} \
+               {output[0]} \
                --out_format 4 \
-               --file {output[0]} 2> {log}
+               --file {output[0]}/taxonomy.tsv 2>> {log}
 
         """
 
@@ -144,11 +125,7 @@ def get_subsets(wildcards):
 
 rule merge_checkm:
     input:
-        completeness= lambda wc: expand(rules.run_checkm_lineage_wf.output[0],
-               subset= get_subsets(wc)),
-        taxonomy= lambda wc: expand(rules.run_checkm_tree_qa.output[0],
-               subset= get_subsets(wc)),
-        markers= lambda wc: expand(rules.run_checkm_lineage_wf.output[1],
+        checkmdirs= lambda wc: expand(rules.run_checkm.output[0],
                subset= get_subsets(wc))
     output:
         checkm="filter/Genome_quality.tsv",
@@ -158,18 +135,25 @@ rule merge_checkm:
         import pandas as pd
         import shutil
         D=[]
+        fout= open(output.markers,'wb')
+        for i in range(len(input)):
 
-        for i in range(len(SAMPLES)):
-            df= pd.read_csv(input.completeness[i],index_col=0,sep='\t')
-            df= df.join(pd.read_csv(input.taxonomy[i],index_col=0,sep='\t'))
+            completeness= os.path.join(input.checkmdirs[i],'completeness.tsv')
+            taxonomy= os.path.join(input.checkmdirs[i],'taxonomy.tsv')
+            fasta   = os.path.join(input.checkmdirs[i],"storage/tree/concatenated.fasta")
+
+
+            df= pd.read_csv(completeness,index_col=0,sep='\t')
+            df= df.join(pd.read_csv(taxonomy,index_col=0,sep='\t'))
             D.append(df)
+
+            shutil.copyfileobj(open(fasta,'rb'),fout)
 
         D= pd.concat(D,axis=0)
         D.to_csv(output.checkm,sep='\t')
+        fout.close()
 
-        with open(output.markers,'wb') as fout:
-            for fasta in input.markers:
-                shutil.copyfileobj(open(fasta,'rb'),fout)
+
 
 
 
