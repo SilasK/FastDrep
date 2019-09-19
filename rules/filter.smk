@@ -77,8 +77,8 @@ else:
                            os.path.join(output[0],f))
 
 
-    localrules: get_predifined_quality
-    ruleorder: get_predifined_quality> merge_checkm
+    localrules: get_predifined_quality, combine_checkm_quality
+#    ruleorder: get_predifined_quality> combine_checkm_quality
     rule get_predifined_quality:
         input:
             config['genome_qualities']
@@ -95,13 +95,14 @@ else:
         input:
             filtered_dir= rules.filter_genomes_by_size.output[0],
             dir= os.path.abspath(input_genome_folder),
-            quality="filter/Genome_quality.tsv",
+            quality=config['genome_qualities'],
         output:
             directory(filter_genome_folder)
         params:
             quality_filter=config['qualityfilter_criteria'],
         run:
             import pandas as pd
+            from glob import glob
 
 
             Q= gd.load_quality(input.quality)
@@ -111,9 +112,9 @@ else:
 
 
 
-            files_in_folder= pd.Series(os.listdir(input.filtered_dir))
+            files_in_folder= pd.Series(os.path.join(input.filtered_dir,"*.fasta"))
 
-            files_in_folder.index= files_in_folder.apply(lambda f: os.path.splitext(f)[0])
+            files_in_folder.index= files_in_folder.apply(io.simplify_path)
 
             intersection = Q.index.intersection(files_in_folder.index)
 

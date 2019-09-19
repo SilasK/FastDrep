@@ -94,11 +94,9 @@ rule run_checkm:
         "checkm/logs/{subset}.txt"
     shell:
         """
-        rm -r {output} ;
         checkm lineage_wf \
             --file {output[0]}/completeness.tsv \
             --tab_table \
-            --quiet \
             --extension fasta \
             --threads {threads} \
             {input.bin_dir} \
@@ -115,11 +113,10 @@ rule run_checkm:
 def get_subsets_results_dir(wildcards):
 
     subset_folder= checkpoints.get_subsets_for_checkm.get(**wildcards).output[0]
+    subsets= [d for d in os.listdir(subset_folder) if d.startswith('subset')]
 
-    subsets = glob_wildcards(os.path.join(subset_folder,"{subset}")).subset
     checkmdirs= expand(rules.run_checkm.output[0],
            subset= subsets)
-
     return checkmdirs
 
 
@@ -170,7 +167,7 @@ rule initialize_checkm:
         "logs/initialize_checkm.log"
     shell:
         """
-            checkm data setRoot {params.database_dir} 2> {log}
+            checkm data setRoot {params.database_dir} &> {log}
 
         """
 
