@@ -95,7 +95,7 @@ else:
         input:
             filtered_dir= rules.filter_genomes_by_size.output[0],
             dir= os.path.abspath(input_genome_folder),
-            quality=config['genome_qualities'],
+            quality="filter/Genome_quality.tsv",
         output:
             directory(filter_genome_folder)
         params:
