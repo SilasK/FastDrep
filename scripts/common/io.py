@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 
+
+
 def simplify_path(path,remove_gz=True):
     """Removes dir and extension from a filepath.
         checks if file has an e
@@ -35,3 +37,14 @@ def convert_percentages(df):
         if df.dtypes[col]=='object':
             if df[col].iloc[0].endswith('%'):
                 df.loc[:,col]= df[col].str.rstrip('%').astype('float') / 100.0
+
+
+def symlink_relative(files,input_dir,output_dir):
+    """create symlink with and adjust for relative path"""
+
+
+    input_dir_rel= os.path.relpath(input.dir, output_dir)
+
+    for f in files:
+        os.symlink(os.path.join(input_dir_rel,f),
+                   os.path.join(output_dir,f))

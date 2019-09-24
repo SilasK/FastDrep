@@ -1,138 +1,174 @@
+
+if not 'database_dir' in config:
+    raise Exception("Expect to find a path to the 'database_dir' in the config."
+                    "If you haven't yet downloaded the checkm databse run this snakefile with 'download' as target")
+
 DBDIR = os.path.realpath(config["database_dir"])
 CHECKMDIR = os.path.join(DBDIR, "checkm")
-CHECKM_ARCHIVE = "checkm_data_v1.0.9.tar.gz"
-CONDAENV='envs'
-CHECKM_init_flag= os.path.join(CHECKM_ARCHIVE,'init.txt')
+CHECKM_ARCHIVE="checkm_data_2015_01_16.tar.gz"
+CHECKM_ARCHIVE_HASH= "631012fa598c43fdeb88c619ad282c4d"
+CHECKM_ADRESS= "https://data.ace.uq.edu.au/public/CheckM_databases"
+
 
 import os
-from glob import glob
+import hashlib
+def md5(fname):
+    # https://stackoverflow.com/questions/3431825/generating-an-md5-checksum-of-a-file
+    hash_md5 = hashlib.md5()
+    if not os.path.exists(fname):
+        return None
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
+def symlink_relative(files,input_dir,output_dir):
+    """create symlink with and adjust for relative path"""
 
 
+    input_dir_rel= os.path.relpath(input_dir, output_dir)
 
-genome_folder=config['genome_folder']
-genome_fasta= glob(os.path.join(genome_folder,"*"))
-genomes = [os.path.splitext(g)[0] for g in genome_fasta]
+    for f in files:
+        os.symlink(os.path.join(input_dir_rel,f),
+                   os.path.join(output_dir,f))
 
-genome_fasta= dict(zip(genomes, genome_fasta))
-def get_genome_fasta(wildcards):
-    return genome_fasta[wildcards.genome]
+bin_folder='filter/bins_filtered_size' #config['bin_folder']
+CHECKM_init_flag= 'checkm/init.txt'
+#
+# rule all:
+#      input:
+#          checkm="filter/Genome_quality.tsv",
+#          markers= "filter/checkm_markers.fasta"
 
-rule all:
+
+localrules: get_subsets_for_checkm, merge_checkm
+
+checkpoint get_subsets_for_checkm:
     input:
-        expand("{genome}/checkm/{file}",genome=genomes,
-               file=['taxonomy.tsv',"completeness.tsv","storage/tree/concatenated.fasta"])
-
-rule init_checkm:
-    input:
-        get_genome_fasta
+        dir=bin_folder
     output:
-        "{genome}/{genome}.fasta"
-    shell:
-        "cp {input} {output}"
-
-
-rule run_checkm_lineage_wf:
-    input:
-        touched_output = CHECKM_init_flag,
-        bins = ["{genome}/{genome}.fasta"] # actualy path to fastas
-    output:
-        "{genome}/checkm/completeness.tsv",
-        "{genome}/checkm/storage/tree/concatenated.fasta"
+        dir=directory(temp(f"checkm/subsets"))
     params:
-        output_dir = lambda wc, output: os.path.dirname(output[0]),
-        bin_dir= lambda wc, input: os.path.dirname(input.bins[0]),
-    conda:
-        "%s/checkm.yaml" % CONDAENV
-    threads:
-        config.get("threads", 1)
-    shell:
-        """
-        rm -r {params.output_dir}
-        checkm lineage_wf \
-            --file {params.output_dir}/completeness.tsv \
-            --tab_table \
-            --quiet \
-            --extension fasta \
-            --threads {threads} \
-            {prams.bin_dir} \
-            {params.output_dir}
-        """
+        subset_size=100
+    run:
+        files= os.listdir(input.dir)
+
+        N_subsets= len(files)//params.subset_size + 1
+        for n in range(N_subsets):
+            output_dir= os.path.join(output.dir,f'subset{n:d}')
+            os.makedirs(output_dir)
+            subset_files=files[n*params.subset_size: min((n+1)*params.subset_size,len(files))]
+            symlink_relative(subset_files,input.dir,output_dir)
 
 
 
-rule run_checkm_tree_qa:
-    input:
-        tree="{checkmfolder}/completeness.tsv"
+rule download:
     output:
-        summary="{checkmfolder}/taxonomy.tsv",
-    params:
-        tree_dir = lambda wc, input: os.path.dirname(input.tree),
-    conda:
-        "%s/checkm.yaml"  % CONDAENV
+        touch(f'{DBDIR}/checkm_downloaded'),
+        tarbal=temp(f"{DBDIR}/{CHECKM_ARCHIVE}"),
+        dir = CHECKMDIR
     threads:
         1
+    run:
+        shell("wget -O {output.tarbal} '{CHECKM_ADRESS}/{CHECKM_ARCHIVE}' ")
+        if not CHECKM_ARCHIVE_HASH == md5(output.tarbal):
+            raise OSError(2, "Invalid checksum", output.tarbal)
+        os.makedirs(output.dir)
+        shell("tar -zxf {output.tarbal} --directory {output.dir}")
+
+
+
+
+
+rule run_checkm:
+    input:
+        touched_output = CHECKM_init_flag,
+        bin_dir = "checkm/subsets/{subset}"
+    output:
+        directory("checkm/results/{subset}"),
+    conda:
+        "../envs/checkm.yaml"
+    threads:
+        config.get("threads",8)
+    log:
+        "checkm/logs/{subset}.txt"
     shell:
         """
+        checkm lineage_wf \
+            --file {output[0]}/completeness.tsv \
+            --tab_table \
+            --extension fasta \
+            --threads {threads} \
+            {input.bin_dir} \
+            {output[0]} 2> {log}
+
             checkm tree_qa \
-               {params.tree_dir} \
+               {output[0]} \
                --out_format 4 \
-               --file {output.netwick}
+               --file {output[0]}/taxonomy.tsv 2>> {log}
 
         """
 
 
-CHECKMFILES=[   "%s/taxon_marker_sets.tsv" % CHECKMDIR,
-        "%s/selected_marker_sets.tsv" % CHECKMDIR,
-        "%s/pfam/tigrfam2pfam.tsv" % CHECKMDIR,
-        "%s/pfam/Pfam-A.hmm.dat" % CHECKMDIR,
-        "%s/img/img_metadata.tsv" % CHECKMDIR,
-        "%s/hmms_ssu/SSU_euk.hmm" % CHECKMDIR,
-        "%s/hmms_ssu/SSU_bacteria.hmm" % CHECKMDIR,
-        "%s/hmms_ssu/SSU_archaea.hmm" % CHECKMDIR,
-        "%s/hmms_ssu/createHMMs.py" % CHECKMDIR,
-        "%s/hmms/phylo.hmm.ssi" % CHECKMDIR,
-        "%s/hmms/phylo.hmm" % CHECKMDIR,
-        "%s/hmms/checkm.hmm.ssi" % CHECKMDIR,
-        "%s/hmms/checkm.hmm" % CHECKMDIR,
-        "%s/genome_tree/missing_duplicate_genes_97.tsv" % CHECKMDIR,
-        "%s/genome_tree/missing_duplicate_genes_50.tsv" % CHECKMDIR,
-        "%s/genome_tree/genome_tree.taxonomy.tsv" % CHECKMDIR,
-        "%s/genome_tree/genome_tree_reduced.refpkg/phylo_modelJqWx6_.json" % CHECKMDIR,
-        "%s/genome_tree/genome_tree_reduced.refpkg/genome_tree.tre" % CHECKMDIR,
-        "%s/genome_tree/genome_tree_reduced.refpkg/genome_tree.log" % CHECKMDIR,
-        "%s/genome_tree/genome_tree_reduced.refpkg/genome_tree.fasta" % CHECKMDIR,
-        "%s/genome_tree/genome_tree_reduced.refpkg/CONTENTS.json" % CHECKMDIR,
-        "%s/genome_tree/genome_tree.metadata.tsv" % CHECKMDIR,
-        "%s/genome_tree/genome_tree_full.refpkg/phylo_modelEcOyPk.json" % CHECKMDIR,
-        "%s/genome_tree/genome_tree_full.refpkg/genome_tree.tre" % CHECKMDIR,
-        "%s/genome_tree/genome_tree_full.refpkg/genome_tree.log" % CHECKMDIR,
-        "%s/genome_tree/genome_tree_full.refpkg/genome_tree.fasta" % CHECKMDIR,
-        "%s/genome_tree/genome_tree_full.refpkg/CONTENTS.json" % CHECKMDIR,
-        "%s/genome_tree/genome_tree.derep.txt" % CHECKMDIR,
-        "%s/.dmanifest" % CHECKMDIR,
-        "%s/distributions/td_dist.txt" % CHECKMDIR,
-        "%s/distributions/gc_dist.txt" % CHECKMDIR,
-        "%s/distributions/cd_dist.txt" % CHECKMDIR
+def get_subsets_results_dir(wildcards):
+
+    subset_folder= checkpoints.get_subsets_for_checkm.get(**wildcards).output[0]
+    subsets= [d for d in os.listdir(subset_folder) if d.startswith('subset')]
+
+    checkmdirs= expand(rules.run_checkm.output[0],
+           subset= subsets)
+    return checkmdirs
+
+
+rule merge_checkm:
+    input:
+        checkmdirs= get_subsets_results_dir
+    output:
+        checkm="filter/Genome_quality.tsv",
+        markers= "filter/checkm_markers.fasta"
+    run:
+
+        import pandas as pd
+        import shutil
+        D=[]
+        fout= open(output.markers,'wb')
+        for i in range(len(input)):
+
+            completeness= os.path.join(input.checkmdirs[i],'completeness.tsv')
+            taxonomy= os.path.join(input.checkmdirs[i],'taxonomy.tsv')
+            fasta   = os.path.join(input.checkmdirs[i],"storage/tree/concatenated.fasta")
+
+
+            df= pd.read_csv(completeness,index_col=0,sep='\t')
+            df= df.join(pd.read_csv(taxonomy,index_col=0,sep='\t'))
+            D.append(df)
+
+            shutil.copyfileobj(open(fasta,'rb'),fout)
+
+        D= pd.concat(D,axis=0)
+        D.to_csv(output.checkm,sep='\t')
+        fout.close()
+
+
+
+
 
 localrules: initialize_checkm
 rule initialize_checkm:
     input:
-        ancient(CHECKMFILES)
+        ancient(rules.download.output[0])
     output:
-        touched_output = CHECKM_init_flag
+        touched_output = touch(CHECKM_init_flag)
     params:
         database_dir = CHECKMDIR,
-        script_dir = os.path.dirname(os.path.abspath(workflow.snakefile))
     conda:
-        "%s/checkm.yaml" % CONDAENV
+        "../envs/checkm.yaml"
     log:
         "logs/initialize_checkm.log"
     shell:
         """
-        python {params.script_dir}/rules/initialize_checkm.py \
-            {params.database_dir} \
-            {output.touched_output} \
-            {log}
+            checkm data setRoot {params.database_dir} &> {log}
+
         """
 
 
@@ -146,7 +182,7 @@ rule initialize_checkm:
 #     log:
 #         "checkm/tetra.txt"
 #     conda:
-#         "%s/checkm.yaml" % CONDAENV
+#         "../envs/checkm.yaml"
 #     threads:
 #         config.get("threads", 8)
 #     shell:
@@ -171,7 +207,7 @@ rule initialize_checkm:
 #     log:
 #         "logs/checkm/outliers.txt"
 #     conda:
-#         "%s/checkm.yaml" % CONDAENV
+#         "../envs/checkm.yaml"
 #     threads:
 #         config.get("threads", 8)
 #     shell:
@@ -203,7 +239,7 @@ rule initialize_checkm:
 #         evalue = 1e-05,
 #         concatenate = 200 #concatenate hits that are within the specified number of base pairs
 #     conda:
-#         "%s/checkm.yaml" % CONDAENV
+#         "../envs/checkm.yaml"
 #     threads:
 #         1
 #     shell:
