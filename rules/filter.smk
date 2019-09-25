@@ -1,30 +1,4 @@
 
-rule calculate_stats:
-    input:
-        input_genome_folder,
-    output:
-        "filter/genome_stats.tsv"
-    threads:
-        10
-    run:
-        from common.genome_stats import get_genome_stats
-        from common import genome_pdist as gd
-        from multiprocessing import Pool
-
-        import pandas as pd
-
-
-        pool = Pool(threads)
-
-        fasta_files= glob(f"{input[0]}/*.fasta")
-
-        results= pool.map(get_genome_stats,fasta_files)
-        Stats= pd.DataFrame(results,columns=['Length','N50'],index=fasta_files)
-        Stats.index= gd.simplify_index(Stats.index)
-
-        Stats.to_csv(output[0],sep='\t')
-
-
 localrules: filter_genomes_by_size, filter_genomes_by_quality,get_orig_filenames
 
 rule get_orig_filenames:
@@ -41,6 +15,33 @@ rule get_orig_filenames:
         filenames.index.name='Bin'
 
             filenames.to_csv(output[0],sep='\t',header=True)
+
+
+rule calculate_stats:
+    input:
+        "filter/bin2filename.tsv",
+    output:
+        "filter/genome_stats.tsv"
+    threads:
+        10
+    run:
+        from common.genome_stats import get_genome_stats
+        from common import genome_pdist as gd
+        from multiprocessing import Pool
+
+        import pandas as pd
+
+
+        pool = Pool(threads)
+
+        Filenames= pd.read_csv(input[0],sep='\t',index_col=0,squeeze=True)
+
+        results= pool.map(get_genome_stats,Filenames.values)
+        Stats= pd.DataFrame(results,columns=['Length','N50'],index=Filenames.index)
+
+        Stats.to_csv(output[0],sep='\t')
+
+
 
 
 if config.get('skip_filter',False):
