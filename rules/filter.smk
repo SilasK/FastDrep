@@ -24,6 +24,25 @@ rule calculate_stats:
 
         Stats.to_csv(output[0],sep='\t')
 
+
+localrules: filter_genomes_by_size, filter_genomes_by_quality,get_orig_filenames
+
+rule get_orig_filenames:
+    input:
+        dir=input_genome_folder
+    output:
+        "filter/bin2filename.tsv"
+    run:
+        import pandas as pd
+        from glob import glob
+        filenames= pd.Series(glob(os.path.join(input.filtered_dir,"*.f*")),name='Filename')
+        filenames.index= filenames.apply(lambda f: os.path.splitext(f)[0])
+
+        filenames.index.name='Bin'
+
+            filenames.to_csv(output[0],sep='\t',header=True)
+
+
 if config.get('skip_filter',False):
     filter_genome_folder= input_genome_folder
 else:
@@ -32,21 +51,7 @@ else:
 
 
 
-    localrules: filter_genomes_by_size, filter_genomes_by_quality,get_orig_filenames
 
-    rule get_orig_filenames:
-        input:
-            dir=input_genome_folder
-        output:
-            "filter/bin2filename.tsv"
-        run:
-            import pandas as pd
-            filenames= pd.Series(os.listdir(input.dir),name='Filename')
-            filenames.index= filenames.apply(lambda f: os.path.splitext(f)[0])
-
-            filenames.index.name='Bin'
-
-            filenames.to_csv(output[0],sep='\t',header=True)
 
 
     rule filter_genomes_by_size:
@@ -112,7 +117,7 @@ else:
 
 
 
-            files_in_folder= pd.Series(os.path.join(input.filtered_dir,"*.fasta"))
+            files_in_folder= pd.Series(glob(os.path.join(input.filtered_dir,"*.fasta")))
 
             files_in_folder.index= files_in_folder.apply(io.simplify_path)
 
@@ -150,19 +155,23 @@ def gen_names_for_range(N,prefix='',start=1):
 
 
 genome_folder='mags'
+Filenames="tables/Filenames.tsv"
 
 localrules: rename_genomes, decompress_genomes, rename_quality
 checkpoint rename_genomes:
     input:
         genome_folder= filter_genome_folder,
         stats= rules.calculate_stats.output[0],
+        filenames= rules.get_orig_filenames.output[0]
 
     output:
         genome_folder= directory(genome_folder),
         mapping= "tables/renamed_genomes.tsv",
         stats="tables/genome_stats.tsv",
+        filenames=Filenames
     params:
-        prefix= config.get('mag_prefix','MAG')
+        prefix= config.get('mag_prefix','MAG'),
+        method= config.get('rename_method','prefix')
 
     run:
 
@@ -170,15 +179,19 @@ checkpoint rename_genomes:
         import shutil
         from glob import glob
 
-        Mapping= pd.DataFrame()
+        Mapping= pd.read_csv(input.filenames,sep='\t',index_col=0).rename(columns={'Filename':'Original_fasta'})
 
-        Mapping['Original_fasta'] = glob(os.path.join(input.genome_folder,"*.f*"))
-        Mapping.index = gd.simplify_index(Mapping.Original_fasta)
-        Mapping.index.name='Original'
-        Mapping.sort_index(inplace=True)
+        if params.method=='prefix':
+            Mapping['Genome']= gen_names_for_range(Mapping.shape[0],params.prefix)
 
-        Mapping['Genome']= gen_names_for_range(Mapping.shape[0],params.prefix)
+
+
+        # new filenames
+        Mapping['Filename']= Mapping.Genome.apply(lambda g: os.path.join(output.genome_folder,g+'.fasta'))
         Mapping.to_csv(output.mapping,sep='\t')
+        newFilenames= Mapping.set_index('Genome').Filename
+        newFilenames.to_csv(output.filenames,sep='\t')
+
 
         #Rename stats
         Stats= pd.read_csv(input.stats, sep='\t',index_col=0)
@@ -193,7 +206,7 @@ checkpoint rename_genomes:
         for _,row in Mapping.iterrows():
 
             shutil.copy(row.Original_fasta,
-                        os.path.join(output.genome_folder,row.Genome+'.fasta')
+                        row.Filename
                         )
 
 rule rename_quality:
