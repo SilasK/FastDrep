@@ -183,12 +183,12 @@ checkpoint rename_genomes:
 
         Mapping= pd.read_csv(input.filenames,sep='\t',index_col=0)
 
-        if params.method is None:
+        if (params.method is None) or (params.method=='None'):
             Mapping['Genome']=Mapping.index
         elif params.method=='prefix':
             Mapping['Genome']= gen_names_for_range(Mapping.shape[0],params.prefix)
         else:
-            raise NotADirectoryError("config['rename_method'] should be one of None, 'prefix'")
+            raise NotImplementedError("config['rename_method'] should be one of 'None', 'prefix'")
 
 
         # new filenames
