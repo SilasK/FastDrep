@@ -1,5 +1,5 @@
 
-localrules: filter_genomes_by_size, filter_genomes_by_quality,get_orig_filenames
+localrules: get_orig_filenames
 
 rule get_orig_filenames:
     input:
@@ -63,7 +63,7 @@ else:
     filtered_filenames="filter/filenames_filtered_quality.tsv"
 
 
-
+    localrules: filter_genomes_by_size, filter_genomes_by_quality
     rule filter_genomes_by_size:
         input:
             dir=rules.get_orig_filenames.output.dir,
@@ -167,10 +167,12 @@ genome_folder='genomes'
 localrules: rename_genomes, decompress_genomes, rename_quality
 checkpoint rename_genomes:
     input:
-        filenames= filtered_filenames
+        filenames= filtered_filenames,
+        stats=rules.calculate_stats.output[0]
     output:
         genome_folder= directory(genome_folder),
         mapping= "tables/renamed_filenames.tsv",
+        stats="tables/genome_stats.tsv"
     params:
         prefix= config.get('mag_prefix','MAG'),
         method= config.get('rename_method','prefix')
@@ -204,15 +206,19 @@ checkpoint rename_genomes:
             shutil.copy(row.FilenameOriginal,
                         row.Filename
                         )
+        #Rename stats
+        Stats= pd.read_csv(input.stats, sep='\t',index_col=0)
+        Stats= Stats.rename(index=Mapping.Genome).loc[Mapping.Genome]
+        Stats.to_csv(output.stats,sep='\t')
 
-rule rename_stats:
+
+rule rename_quality:
     input:
         mapping= rules.rename_genomes.output.mapping,
         quality=config['genome_qualities'],
-        stats=rules.calculate_stats.output[0]
     output:
         quality="tables/Genome_quality.tsv",
-        stats="tables/genome_stats.tsv"
+
 
     run:
         import pandas as pd
@@ -223,10 +229,7 @@ rule rename_stats:
         Q= Q.rename(index=Mapping.Genome).loc[Mapping.Genome]
         Q.to_csv(output.quality,sep='\t')
 
-        #Rename stats
-        Stats= pd.read_csv(input.stats, sep='\t',index_col=0)
-        Stats= Stats.rename(index=Mapping.Genome).loc[Mapping.Genome]
-        Stats.to_csv(output.stats,sep='\t')
+
 
 
 
