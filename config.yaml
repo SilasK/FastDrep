@@ -14,7 +14,7 @@ mummer:
 fastani:
   k: 16
   fragLen: 3000
-  minFrag: 50
+  minFraction: 0.3
   subset_size: 100
 bbsketch:
   aa:
