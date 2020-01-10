@@ -66,7 +66,7 @@ rule many_minimap:
 
 def combine_paf_input(wildcards):
 
-    alignment_list_folder = checkpoints.filter_mash.get().output[0]
+    alignment_list_folder = checkpoints.filter_minhash.get().output[0]
     N= glob_wildcards(os.path.join(alignment_list_folder,"subset_{n}.txt")).n
 
     return expand("minimap/alignments_stats/subset_{n}.tsv",n=N)

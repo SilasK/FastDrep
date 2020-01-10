@@ -4,7 +4,7 @@ rule mash_sketch_genome:
     input:
         genome_folder
     output:
-        "mash/genomes.msh"
+        "sketches/genomes.msh"
     params:
         k= config['mash']['k'],
         s= config['mash']['sketch_size'],
@@ -38,13 +38,58 @@ rule mash_calculate_dist:
 
 
 
-
-
-
-localrules: filter_mash
-checkpoint filter_mash:
+rule bindash_sketch_genome:
     input:
-        rules.mash_calculate_dist.output[0]
+        genome_folder
+    output:
+        "sketches/genomes.bdsh",
+        "sketches/genomes.bdsh.dat",
+        "sketches/genomes.bdsh.txt"
+    params:
+        k= config['bindash']['k'],
+        sketchsize64= config['bindash']['sketch_size'],
+        extra=config['bindash'].get('extra',"")
+    threads:
+        config['threads']
+    conda:
+        "../envs/bindash.yaml"
+    log:
+        "logs/bindash/sketch.log"
+    shell:
+        "bindash sketch "
+        "--outfname={output[0]} "
+        "--nthreads={threads} "
+        "--sketchsize64={params.sketchsize64} "
+        "--kmerlen={params.k} "
+        "{params.extra} "
+        "{input[0]}/* 2> {log}"
+
+rule bindash_dist:
+    input:
+        rules.bindash_sketch_genome.output[0]
+    output:
+        "tables/bindash_dists.tsv"
+    params:
+        d= config['bindash']['max_dist']
+    threads:
+        config['threads']
+    conda:
+        "../envs/mash.yaml"
+    log:
+        "logs/bindash/dist.log"
+    shell:
+        "bindash dist "
+        "--nthreads={threads} "
+        "--mthres={params.d} "
+        "--outfname={output} {input[0]} 2> {log}"
+
+
+
+
+localrules: filter_minhash
+checkpoint filter_minhash:
+    input:
+        rules.bindash_calculate_dist.output[0]
     output:
         temp(directory('mummer/subsets'))
     params:
@@ -68,7 +113,7 @@ checkpoint filter_mash:
             fout.write("\t".join(sorted(e))+'\n')
 
 def get_mummer_subsets(wildcards):
-    subset_dir= checkpoints.filter_mash.get().output[0]
+    subset_dir= checkpoints.filter_minhash.get().output[0]
 
     subsets= glob_wildcards(os.path.join(subset_dir,'{subset}.txt')).subset
 

@@ -3,6 +3,10 @@ mash:
    k: 21
    sketch_size: 1e4 # 1e3
    max_dist: 0.2
+bindash:
+   k: 21
+   sketch_size: 150
+   max_dist: 0.2
 mummer:
   subset_size: 500
   max_dist: 0.1
