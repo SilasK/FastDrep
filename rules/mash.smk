@@ -3,11 +3,12 @@ rule mash_list:
     input:
         genome_folder
     output:
-        temp("mash/genome_list.txt")
+        temp("sketches/genome_list.txt")
     run:
         from glob import glob
         with open(output[0],'w') as f:
             f.write('\n'.join(glob(f'{input[0]}/*.fasta'))+'\n' )
+
 
 rule mash_sketch_genome:
     input:
@@ -45,11 +46,9 @@ rule mash_calculate_dist:
         "mash dist -p {threads} -d {params.d} {input.genomes} {input.genomes} > {output[0]} 2> {log}"
 
 
-
-
 rule bindash_sketch_genome:
     input:
-        genome_folder
+        rules.mash_list.output
     output:
         "sketches/genomes.bdsh",
         "sketches/genomes.bdsh.dat",
@@ -71,7 +70,7 @@ rule bindash_sketch_genome:
         "--sketchsize64={params.sketchsize64} "
         "--kmerlen={params.k} "
         "{params.extra} "
-        "{input[0]}/* 2> {log}"
+        "--listfname={input[0]} 2> {log}"
 
 rule bindash_dist:
     input:
