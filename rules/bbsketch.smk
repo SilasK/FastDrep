@@ -59,8 +59,6 @@ rule mergesketch_mags:
         NTorAA="(aa|nt)",
     output:
         out="bbsketch/mags_{NTorAA}.sketch.gz"
-    group:
-        "bbsketch"
     threads:
         1
     run:
