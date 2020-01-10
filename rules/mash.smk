@@ -1,8 +1,17 @@
-
+localrules: mash_list
+rule mash_list:
+    input:
+        genome_folder
+    output:
+        temp("mash/genome_list.txt")
+    run:
+        from glob import glob
+        with open(output[0],'w') as f:
+            f.write('\n'.join(glob(f'{input[0]}/*.fasta'))+'\n' )
 
 rule mash_sketch_genome:
     input:
-        genome_folder
+        rules.mash_list.output
     output:
         "mash/genomes.msh"
     params:
@@ -16,7 +25,7 @@ rule mash_sketch_genome:
     log:
         "logs/mash/sketch.log"
     shell:
-        "mash sketch -o {params.out_name} -p {threads} -s {params.s} -k {params.k} {input[0]}/* 2> {log}"
+        "mash sketch -o {params.out_name} -p {threads} -s {params.s} -k {params.k} -l {input[0]} 2> {log}"
 
 
 rule mash_calculate_dist:
