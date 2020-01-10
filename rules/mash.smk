@@ -92,12 +92,17 @@ rule bindash_dist:
         "--outfname={output} {input[0]} 2> {log}"
 
 
-def get_minhash()
+if config['sketcher']=='bindash':
+    genome_sketch=rules.bindash_dist.output[0]
+elif config['sketcher']=='mash':
+    genome_sketch=rules.mash_calculate_dist.output[0]
+else:
+    raise IOError("config argument 'sketcher should be either 'bindash' or 'mash' ")
 
 localrules: filter_minhash
 checkpoint filter_minhash:
     input:
-        rules.bindash_calculate_dist.output[0] if (config['sketcher']=='bindash') else rules.mash_calculate_dist.output[0]
+        genome_sketch
     output:
         temp(directory('mummer/subsets'))
     params:

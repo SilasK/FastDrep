@@ -25,9 +25,9 @@ include: "rules/bbsketch.smk"
 
 rule all:
     input:
-        # "tables/fastANI_dists.tsv",
+        #"tables/fastANI_dists.tsv",
         #expand("pyani/{method}",method=['ANIm','ANIb']),
-        "tables/mash_dists.txt",
+        # "tables/mash_dists.txt",
         "tables/mummer_dist.tsv",
 rule all_bbsketch:
     input:
