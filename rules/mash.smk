@@ -84,12 +84,12 @@ rule bindash_dist:
         "--outfname={output} {input[0]} 2> {log}"
 
 
-
+def get_minhash()
 
 localrules: filter_minhash
 checkpoint filter_minhash:
     input:
-        rules.bindash_calculate_dist.output[0]
+        rules.bindash_calculate_dist.output[0] if (config['sketcher']=='bindash') else rules.mash_calculate_dist.output[0]
     output:
         temp(directory('mummer/subsets'))
     params:
