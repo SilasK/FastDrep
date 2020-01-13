@@ -100,6 +100,23 @@ def load_mash(dist_file,simplify_names=True):
 
     return F
 
+def load_bindash(dist_file,simplify_names=True):
+    """Loads bindash output.
+    Outputs a table with
+    ['Genome1','Genome2','Distance','Pvalue','Fraction','Nmapped','Ntotal','Identity']
+    in header.
+
+    Bindash tables are not necessarily simetrical.
+    """
+    F = load_ani_table_(dist_file,['Distance','Pvalue','Fraction'],simplify_names=simplify_names)
+
+    F['Nmapped']=F.Fraction.map(lambda s: int(s.split('/')[0]))
+    F['Ntotal']=F.Fraction.map(lambda s: int(s.split('/')[1]))
+    F['Fraction']=F.Nmapped/F.Ntotal
+    F['Identity']= 1- F.Distance
+
+    return F
+
 def load_mummer(dist_file):
 
     M=pd.read_csv(dist_file,sep='\t',index_col=[0,1])
