@@ -19,6 +19,40 @@
 #         "minimap2 {params.preset}  -t {threads} -d {output} {input.fasta}   2> {log}"
 #
 
+localrules: minimap_subsets
+checkpoint minimap_subsets:
+    input:
+        genome_sketch
+    output:
+        temp(directory('minimap/subsets'))
+    params:
+        treshold=config['mummer']['max_dist'],
+        N=config['mummer']['subset_size']
+    run:
+
+        F= gd.load_mash(input[0])
+        G= gd.to_graph(F.query(f"Distance<={params.treshold}"))
+        if hasattr(G,'selfloop_edges'):
+            G.remove_edges_from(G.selfloop_edges())
+
+        os.makedirs(output[0])
+
+        fout=None
+        for i,e in enumerate(G.edges()):
+            if (i % params.N) ==0:
+                n= int(i // params.N )+1
+                if fout is not None: fout.close()
+                fout= open(f"{output[0]}/subset_{n}.txt",'w')
+
+            fout.write("\t".join(sorted(e))+'\n')
+
+def get_minimap_subsets(wildcards):
+    subset_dir= checkpoints.minimap_subsets.get().output[0]
+
+    subsets= glob_wildcards(os.path.join(subset_dir,'{subset}.txt')).subset
+
+    return subsets
+
 
 rule minimap:
     input:
@@ -66,7 +100,7 @@ rule many_minimap:
 
 def combine_paf_input(wildcards):
 
-    subsets=get_mummer_subsets(wildcards)
+    subsets=get_minimap_subsets(wildcards)
 
 
     return expand("minimap/alignments_stats/{subset}.tsv",subset=subsets)
