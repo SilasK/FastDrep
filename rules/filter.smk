@@ -161,7 +161,7 @@ def gen_names_for_range(N,prefix='',start=1):
     return [format_int.format(i) for i in range(start,N+start)]
 
 
-genome_folder='genomes'
+
 
 
 localrules: rename_genomes, decompress_genomes, rename_quality

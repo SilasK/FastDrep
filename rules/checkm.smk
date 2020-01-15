@@ -47,7 +47,7 @@ checkpoint get_subsets_for_checkm:
     input:
         dir=bin_folder
     output:
-        dir=directory(temp(f"checkm/subsets"))
+        dir=directory(temp("checkm/subsets"))
     params:
         subset_size=100
     run:
