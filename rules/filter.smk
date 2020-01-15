@@ -234,11 +234,11 @@ rule rename_quality:
 
 
 
-rule decompress_genomes:
-    input:
-        "genomes.tar.gz"
-    output:
-        directory("genomes")
-    shell:
-        "tar -xzf {input}"
-ruleorder: decompress_genomes>rename_genomes
+# rule decompress_genomes:
+#     input:
+#         "genomes.tar.gz"
+#     output:
+#         directory("genomes")
+#     shell:
+#         "tar -xzf {input}"
+# ruleorder: decompress_genomes>rename_genomes

@@ -82,7 +82,7 @@ rule bindash_dist:
     threads:
         config['threads']
     conda:
-        "../envs/mash.yaml"
+        "../envs/bindash.yaml"
     log:
         "logs/bindash/dist.log"
     shell:
@@ -112,7 +112,8 @@ checkpoint filter_minhash:
 
         F= gd.load_mash(input[0])
         G= gd.to_graph(F.query(f"Distance<={params.treshold}"))
-        G.remove_edges_from(G.selfloop_edges())
+        if hasattr(G,'selfloop_edges'):
+            G.remove_edges_from(G.selfloop_edges())
 
         os.makedirs(output[0])
 
