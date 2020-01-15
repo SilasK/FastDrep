@@ -44,12 +44,12 @@ rule minimap:
 rule many_minimap:
     input:
         genome_folder=genome_folder,
-        alignment_list='minimap/alignment_lists/subset_{n}.txt',
+        alignment_list="minimap/subsets/{subset}.txt",
         genome_stats= "tables/genome_stats.tsv"
     output:
-        alignments_stats="minimap/alignments_stats/subset_{n}.tsv",
+        alignments_stats="minimap/alignments_stats/{subset}.tsv",
     log:
-        "logs/minimap2/subset_{n}.txt"
+        "logs/minimap2/{subset}.txt"
     threads:
         config['threads']
     conda:
@@ -66,10 +66,10 @@ rule many_minimap:
 
 def combine_paf_input(wildcards):
 
-    alignment_list_folder = checkpoints.filter_mash.get().output[0]
-    N= glob_wildcards(os.path.join(alignment_list_folder,"subset_{n}.txt")).n
+    subsets=get_mummer_subsets(wildcards)
 
-    return expand("minimap/alignments_stats/subset_{n}.tsv",n=N)
+
+    return expand("minimap/alignments_stats/{subset}.tsv",subset=subsets)
 
 
 localrules: combine_paf
@@ -77,7 +77,7 @@ rule combine_paf:
     input:
         combine_paf_input
     output:
-        "alignments_stats.tsv"
+        "tables/minimap_dists.tsv"
     run:
         shell("head -n1 {input[0]} > {output}")
         for fin in input:

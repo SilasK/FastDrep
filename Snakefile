@@ -22,17 +22,17 @@ include: "rules/pyani.smk"
 include: "rules/strains.smk"
 include: "rules/bbsketch.smk"
 
-
 rule all:
     input:
-        # "tables/fastANI_dists.tsv",
+        #"tables/fastANI_dists.tsv",
         #expand("pyani/{method}",method=['ANIm','ANIb']),
-        "tables/mash_dists.txt",
+        # "tables/mash_dists.txt",
         "tables/mummer_dist.tsv",
 rule all_bbsketch:
     input:
         "tables/bbsketch_aa.tsv",
         "tables/bbsketch_nt.tsv"
+        
 rule all_species:
     input:
         "tables/refseq_mapping_species.tsv",

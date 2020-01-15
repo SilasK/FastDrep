@@ -43,18 +43,32 @@ rule mergesketch:
         io.cat_files(input,output[0],gzip=False)
 
 
-def get_mags(wildcards):
+# def get_mags(wildcards):
+#
+#     folder=checkpoints.rename_genomes.get().output.genome_folder
+#
+#     genomes= glob_wildcards(os.path.join(folder,'{genome}.fasta')).genome
+#     return list(genomes)
 
+def mergesketch_mags_input(wildcards):
     folder=checkpoints.rename_genomes.get().output.genome_folder
+    print(folder)
 
     genomes= glob_wildcards(os.path.join(folder,'{genome}.fasta')).genome
-    return list(genomes)
 
+    print(len(genomes))
 
+    sketches= expand("bbsketch/sketches_{NTorAA}/{genome}.sketch.gz",
+           genome=genomes,**wildcards)
+
+    print(len(sketches))
+
+    return sketches
+
+localrules: mergesketch_mags
 rule mergesketch_mags:
     input:
-        lambda wildcards: expand("bbsketch/sketches_{{NTorAA}}/{genome}.sketch.gz",
-               genome=get_mags(wildcards))
+        mergesketch_mags_input
     wildcard_constraints:
         NTorAA="(aa|nt)",
     output:
@@ -62,6 +76,8 @@ rule mergesketch_mags:
     threads:
         1
     run:
+        print(type(input))
+        print(len(input))
         io.cat_files(input,output[0],gzip=False)
 
 

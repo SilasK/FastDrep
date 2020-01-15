@@ -4,7 +4,7 @@
 def estimate_time_mummer(N,threads):
     "retur time in minutes"
 
-    time_per_mummer_call = 1 # min
+    time_per_mummer_call = 1/60 # 1min in h
 
     return int(N*time_per_mummer_call)//threads + 5
 
@@ -129,7 +129,6 @@ def get_representatives(wildcards):
     resolution_level= wildcards.resolution_level
 
     if resolution_level=='species':
-
         cluster_file=checkpoints.cluster_species.get().output.cluster_file
     elif resolution_level=='strains':
         cluster_file=checkpoints.cluster_strains.get().output.cluster_file
