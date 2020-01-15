@@ -1,2 +1,2 @@
 
-include: "rules/compare.smk"
+include: "compare.smk"
