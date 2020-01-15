@@ -50,7 +50,7 @@ rule merge_mummer_ani:
     input:
         get_merge_mummer_ani_input
     output:
-        "tables/mummer_dist.tsv"
+        "tables/mummer_dists.tsv"
     run:
         import pandas as pd
         import shutil

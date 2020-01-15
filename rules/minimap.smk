@@ -54,27 +54,6 @@ def get_minimap_subsets(wildcards):
     return subsets
 
 
-rule minimap:
-    input:
-        ref= f"{genome_folder}/{{genome2}}.fasta",
-        querry=f"{genome_folder}/{{genome1}}.fasta",
-    output:
-        "minimap/paf/{genome1}-{genome2}.paf"
-    conda:
-        "../envs/minimap2.yaml"
-    group:
-        "minimap2"
-    conda:
-        "../envs/minimap2.yaml"
-    threads:
-        config['threads']
-    params:
-        preset= "-c --secondary=no -x asm10" #asm5/asm10/asm20: asm-to-ref mapping, for ~0.1/1/5% sequence divergence
-    shell:
-        "minimap2 {params.preset}  -t {threads} {input.querry} {input.ref}   > {output}"
-
-
-
 rule many_minimap:
     input:
         genome_folder=genome_folder,
@@ -89,7 +68,7 @@ rule many_minimap:
     conda:
         "../envs/minimap2.yaml"
     params:
-        minimap_extra= "-c --secondary=no", #"-x asm10", #asm5/asm10/asm20: asm-to-ref mapping, for ~0.1/1/5% sequence divergence
+        minimap_extra= "-c --secondary=no -x asm10", #asm5/asm10/asm20: asm-to-ref mapping, for ~0.1/1/5% sequence divergence
         paf_folder="minimap/paf",
         extension='.fasta'
     script:

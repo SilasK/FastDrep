@@ -103,7 +103,7 @@ def parse_paf_files(paf_files,genome_stats_file,output_file):
             Identity = (M.Identity*M.Allength).sum() / M.Allength.sum()
             Length= M.Allength.sum()
 
-            min_genome_size= stats.loc[[genome1,genome2],'Total_length'].min()
+            min_genome_size= stats.loc[[genome1,genome2],'Length'].min()
             AlignedFraction =Length / min_genome_size
 
 

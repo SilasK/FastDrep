@@ -20,4 +20,4 @@ include: "rules/filter.smk"
 
 rule all:
     input:
-        "tables/mummer_dist.tsv",
+        "tables/mummer_dists.tsv",
