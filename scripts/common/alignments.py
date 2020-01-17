@@ -28,7 +28,6 @@ def parse_minimap_line(line):
     """parses a minmap paf line, return a dict.
     reads tags and converts datatyes"""
     elements= line.strip().split()
-    print([e[:3] for e in elements])
     out={}
 
     if not len(elements)==0:
@@ -64,7 +63,6 @@ def load_paf(paf_file):
         parsed=[]
         with open(paf_file) as f:
             for line in f:
-                line= f.readline()
                 parsed.append(parse_minimap_line(line))
 
         M=pd.DataFrame(parsed).dropna(how='all')
