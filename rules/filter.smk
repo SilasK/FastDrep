@@ -36,25 +36,11 @@ rule calculate_stats:
     output:
         "filter/genome_stats.tsv"
     threads:
-        10
+        config['threads']
     run:
-        from common.genome_stats import get_genome_stats
-        from common import genome_pdist as gd
-        from multiprocessing import Pool
-
-        import pandas as pd
-
-
-        pool = Pool(threads)
-
+        from common.genome_stats import get_many_genome_stats
         filenames= pd.read_csv(input[0],sep='\t',index_col=0,squeeze=True)
-
-        results= pool.map(get_genome_stats,filenames.FilenameOriginal)
-        Stats= pd.DataFrame(results,columns=['Length','N50'],index=filenames.index)
-
-        Stats.to_csv(output[0],sep='\t')
-
-
+        get_many_genome_stats(filenames.FilenameOriginal,output[0],threads)
 
 
 if config.get('skip_filter',False):

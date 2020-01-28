@@ -5,7 +5,7 @@ import os
 from .io import simplify_path
 
 
-def get_genome_stats(fasta_file,remove_index=True):
+def genome_stats(fasta_file,remove_index=True):
     """Uses pyfastx to get genome stats from a fasta file. Outputs a tuple with:
        name,Length, n_seq,N50,L50
     """
@@ -30,6 +30,6 @@ def get_many_genome_stats(filenames,output_filename,threads=1):
     pool = Pool(threads)
 
 
-    results= pool.map(get_genome_stats,filenames)
+    results= pool.map(genome_stats,filenames)
     Stats= pd.DataFrame(results,columns=["Genome","Length", "Nseqs","N50","L50"])
     Stats.to_csv(output_filename,sep='\t',index=False)
