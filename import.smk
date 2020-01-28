@@ -20,4 +20,5 @@ include: "rules/filter.smk"
 
 rule all:
     input:
-        "tables/mummer_dists.tsv",
+        genome_folder,
+        "tables/Genome_quality.tsv"
