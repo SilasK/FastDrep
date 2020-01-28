@@ -16,7 +16,7 @@ from common import io
 
 
 
-#include: "rules/fastani.smk"
+include: "rules/fastani.smk"
 include: "rules/mash.smk"
 include: "rules/pyani.smk"
 include: "rules/strains.smk"

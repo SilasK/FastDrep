@@ -57,8 +57,6 @@ def mergesketch_mags_input(wildcards):
     sketches= expand("bbsketch/sketches_{NTorAA}/{genome}.sketch.gz",
            genome=genomes,**wildcards)
 
-    print(len(sketches))
-
     return sketches
 
 localrules: mergesketch_mags
