@@ -1,43 +1,35 @@
-import numpy as np
+import pyfastx
+from multiprocessing import Pool
+import pandas as pd
+import os
+from .io import simplify_path
 
 
-Nucleotides_with_N= {'A', 'C', 'G', 'N', 'T','a','c','g','n','t'}
-def check_accepted_characters(seq,acepted_characters=Nucleotides_with_N):
-    if not (set(seq) - acepted_characters == set()):
-        raise Exception("I found something else than the accepted characters"
-                        " in this line in this fasta file. "
-                        f"Line:\n{line}\naccepted_cahracters: {acepted_characters}"
-                       )
+def get_genome_stats(fasta_file,remove_index=True):
+    """Uses pyfastx to get genome stats from a fasta file. Outputs a tuple with:
+       name,Length, n_seq,N50,L50
+    """
 
-def get_genome_stats(fasta_file):
+    name = simplify_path(fasta_file)
+
+    fa = pyfastx.Fasta(fasta_file)
+    N50,L50 =fa.nl(50)
+    n_seq= len(fa)
+    Length= fa.size
+
+    if remove_index:
+        os.remove(fa.file_name+'.fxi')
+
+    return name,Length, n_seq,N50,L50
+
+
+def get_many_genome_stats(filenames,output_filename,threads=1):
     """Small function to calculate total genome length and N50
     """
 
-    Lengths=[]
-
-    with open(fasta_file) as fasta:
-        seq=''
-
-        for line in fasta:
-            if line[0]=='>':
-                Lengths.append(0)
-            else:
-                seq= line.strip()
-                check_accepted_characters(seq)
-                Lengths[-1]+= len(seq)
+    pool = Pool(threads)
 
 
-    Lengths= np.array(Lengths)
-    Total_length= Lengths.sum()
-
-    if len(Lengths)==0:
-        raise IOError(f"file {fasta_file} has no contigs")
-    elif len(Lengths)==1:
-        N50=1
-    else:
-        Lengths.sort()
-        Lengths= Lengths[-1:0:-1] # sort length to shortest
-
-        N50= Lengths[Lengths.cumsum() >= Total_length/2][0] # get first contig with cumsum larger than 50% of Total length
-
-    return Total_length, N50
+    results= pool.map(get_genome_stats,filenames)
+    Stats= pd.DataFrame(results,columns=["Genome","Length", "Nseqs","N50","L50"])
+    Stats.to_csv(output_filename,sep='\t',index=False)
