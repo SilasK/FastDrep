@@ -39,6 +39,7 @@ rule calculate_stats:
         config['threads']
     run:
         from common.genome_stats import get_many_genome_stats
+        import pandas as pd
         filenames= pd.read_csv(input[0],sep='\t',index_col=0,squeeze=True)
         get_many_genome_stats(filenames.FilenameOriginal,output[0],threads)
 
@@ -81,7 +82,10 @@ else:
 
 
     localrules: get_predifined_quality, combine_checkm_quality
-#    ruleorder: get_predifined_quality> combine_checkm_quality
+
+
+if 'genome_qualities' in config:
+    ruleorder: get_predifined_quality> combine_checkm_quality
     rule get_predifined_quality:
         input:
             config['genome_qualities']
@@ -201,7 +205,7 @@ checkpoint rename_genomes:
 rule rename_quality:
     input:
         mapping= rules.rename_genomes.output.mapping,
-        quality=config['genome_qualities'],
+        quality="filter/Genome_quality.tsv",
     output:
         quality="tables/Genome_quality.tsv",
 
