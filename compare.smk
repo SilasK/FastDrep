@@ -28,7 +28,7 @@ rule all:
         #"tables/fastANI_dists.tsv",
         #expand("pyani/{method}",method=['ANIm','ANIb']),
         # "tables/mash_dists.txt",
-        "tables/mummer_dists.tsv",
+        #"tables/mummer_dists.tsv",
         "tables/minimap_dists.tsv",
 
 rule all_bbsketch:
