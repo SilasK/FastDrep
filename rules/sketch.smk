@@ -1,9 +1,9 @@
-localrules: mash_list
-rule mash_list:
+localrules: list_genomes
+rule list_genomes:
     input:
         genome_folder
     output:
-        temp("sketches/genome_list.txt")
+        temp("sketches/genome_list_{sketcher}.txt")
     run:
         from glob import glob
         with open(output[0],'w') as f:
@@ -12,7 +12,7 @@ rule mash_list:
 
 rule mash_sketch_genome:
     input:
-        rules.mash_list.output
+        "sketches/genome_list_mash.txt"
     output:
         "sketches/genomes.msh"
     params:
@@ -35,7 +35,8 @@ rule mash_calculate_dist:
     output:
         "tables/mash_dists.txt"
     params:
-        d= config['mash']['max_dist']
+        d= config['sketch_max_dist'],
+        k= config['sketch_k']
     threads:
         config['threads']
     conda:
@@ -43,20 +44,22 @@ rule mash_calculate_dist:
     log:
         "logs/mash/dist.log"
     shell:
-        "mash dist -p {threads} -d {params.d} {input.genomes} {input.genomes} > {output[0]} 2> {log}"
+        "mash dist -p {threads} -d {params.d} "
+        " -k {params.k} "
+        "{input.genomes} {input.genomes} > {output[0]} 2> {log}"
 
 
 rule bindash_sketch_genome:
     input:
-        rules.mash_list.output
+        "sketches/genome_list_bindash.txt"
     output:
         "sketches/genomes.bdsh",
         "sketches/genomes.bdsh.dat",
         "sketches/genomes.bdsh.txt"
     params:
-        k= config['bindash']['k'],
-        sketchsize64= config['bindash']['sketch_size'],
-        extra=config['bindash'].get('extra',"")
+        k= config['sketch_k'],
+        sketchsize64= config['sketch_size']//64,
+        extra=config.get('bindash_extra',"")
     threads:
         config['threads']
     conda:
@@ -92,22 +95,15 @@ rule bindash_dist:
         "--outfname={output} {input[0]} 2> {log}"
 
 
-if config['sketcher']=='bindash':
-    genome_sketch=rules.bindash_dist.output[0]
-elif config['sketcher']=='mash':
-    genome_sketch=rules.mash_calculate_dist.output[0]
-else:
-    raise IOError("config argument 'sketcher should be either 'bindash' or 'mash' ")
-
-localrules: filter_minhash
-checkpoint filter_minhash:
+localrules: filter_sketch
+checkpoint filter_sketch:
     input:
-        genome_sketch
+        f"tables/{config['sketcher']}_dists.tsv"
     output:
-        temp(directory('mummer/subsets'))
+        temp(directory('{aligner}/subsets'))
     params:
-        treshold=config['mummer']['max_dist'],
-        N=config['mummer']['subset_size']
+        treshold=config['pre_cluster_treshold'],
+        N=config['subset_size_alignments']
     run:
 
         F= gd.load_mash(input[0])
@@ -126,8 +122,8 @@ checkpoint filter_minhash:
 
             fout.write("\t".join(sorted(e))+'\n')
 
-def get_mummer_subsets(wildcards):
-    subset_dir= checkpoints.filter_minhash.get().output[0]
+def get_alignment_subsets(wildcards):
+    subset_dir= checkpoints.filter_sketch.get(**wildcards).output[0]
 
     subsets= glob_wildcards(os.path.join(subset_dir,'{subset}.txt')).subset
 

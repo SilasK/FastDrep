@@ -1,16 +1,13 @@
 threads: 8
+
 sketcher: "bindash" # use bindash or mash for sketching
-mash:
-   k: 21
-   sketch_size: 1e4 # 1e3
-   max_dist: 0.2
-bindash:
-   k: 21
-   sketch_size: 150
-   max_dist: 0.2
-mummer:
-  subset_size: 500
-  max_dist: 0.1
+sketch_k: 21
+sketch_size: 1e4 # 1e3
+sketch_max_dist: 0.2
+
+pre_cluster_treshold: 0.1
+subset_size_alignments: 500
+
 fastani:
   k: 16
   fragLen: 3000

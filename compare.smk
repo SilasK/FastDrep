@@ -17,11 +17,12 @@ from common import io
 
 
 include: "rules/fastani.smk"
-include: "rules/mash.smk"
 include: "rules/pyani.smk"
-include: "rules/strains.smk"
 include: "rules/bbsketch.smk"
-include: "rules/minimap.smk"
+
+include: "rules/sketch.smk"
+include: "rules/alignments.smk"
+include: "rules/cluster.smk"
 
 rule all:
     input:
