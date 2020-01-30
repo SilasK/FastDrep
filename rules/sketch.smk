@@ -16,8 +16,8 @@ rule mash_sketch_genome:
     output:
         "sketches/genomes.msh"
     params:
-        k= config['mash']['k'],
-        s= config['mash']['sketch_size'],
+        k= config['sketch_k'],
+        s= config['sketch_size'],
         out_name = lambda wc, output: os.path.splitext(output[0])[0]
     threads:
         config['threads']
@@ -58,7 +58,7 @@ rule bindash_sketch_genome:
         "sketches/genomes.bdsh.txt"
     params:
         k= config['sketch_k'],
-        sketchsize64= config['sketch_size']//64,
+        sketchsize64= int(config['sketch_size'])//64,
         extra=config.get('bindash_extra',"")
     threads:
         config['threads']
@@ -81,7 +81,7 @@ rule bindash_dist:
     output:
         "tables/bindash_dists.tsv"
     params:
-        d= config['bindash']['max_dist']
+        d= config['sketch_max_dist']
     threads:
         config['threads']
     conda:
@@ -122,7 +122,7 @@ checkpoint filter_sketch:
 
             fout.write("\t".join(sorted(e))+'\n')
 
-def get_alignment_subsets(wildcards):
+def get_alignment_subsets(**wildcards):
     subset_dir= checkpoints.filter_sketch.get(**wildcards).output[0]
 
     subsets= glob_wildcards(os.path.join(subset_dir,'{subset}.txt')).subset

@@ -23,12 +23,17 @@ rule many_minimap:
         "../scripts/many_minimap.py"
 
 
+def get_combine_paf_input(wildcards):
+
+    subsets=get_alignment_subsets(aligner='minimap')
+
+    return expand("minimap/alignments_stats/{subset}.tsv",subset=subsets)
+
 
 localrules: combine_paf
 rule combine_paf:
     input:
-        expand("minimap/alignments_stats/{subset}.tsv",
-               subset=get_alignment_subsets(aligner='minimap'))
+        get_combine_paf_input
     output:
         "tables/minimap_dists.tsv"
     run:
@@ -66,8 +71,8 @@ rule run_mummer:
     conda:
         "../envs/mummer.yaml"
     resources:
-        time= lambda wc, input, threads: estimate_time_mummer(config['mummer']['subset_size'],threads),
-        mem= config['mummer'].get('mem',5)
+        time= lambda wc, input, threads: estimate_time_mummer(config['subset_size'],threads),
+        mem= config.get('mummer_mem',5)
     log:
         "logs/mummer/workflows/{subset}.txt"
     params:
