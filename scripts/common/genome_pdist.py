@@ -126,6 +126,7 @@ def load_mummer(dist_file):
 def load_minimap(dist_file):
 
     M=pd.read_csv(dist_file,sep='\t',index_col=[0,1])
+    assert 'Identity' in M.columns
     return M
 
 
