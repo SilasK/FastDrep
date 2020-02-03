@@ -2,7 +2,7 @@
 
 
 
-ANI_file= f"tables/{config['sketcher']}_dists.tsv"
+ANI_file= f"tables/{config['aligner']}_dists.tsv"
 
 localrules: cluster_species,get_representatives
 checkpoint cluster_species:
