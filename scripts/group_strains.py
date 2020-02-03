@@ -41,7 +41,7 @@ if __name__=='__main__':
 
         if have_strain_gap[species]:
 
-            ID= data.ANI.unstack()
+            ID= data.Identity.unstack()
 
             all_indexes= ID.index.union(ID.columns)
             ID= ID.reindex(index=all_indexes, columns=all_indexes).fillna(0)
