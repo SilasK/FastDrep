@@ -47,6 +47,7 @@ if __name__=='__main__':
             ID= ID+ID.T
             ID.values[np.eye(ID.shape[0],dtype=bool)]=1
             Dist= 1-ID.fillna(0.8)
+            Dist.clip(0,1,inplace=True)
             linkage = hc.linkage(sp.distance.squareform(Dist), method=linkage_method)
 
 

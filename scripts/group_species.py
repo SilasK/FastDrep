@@ -65,7 +65,7 @@ if __name__=='__main__':
                         f"got {config['aligner']}"
                         )
     Dist= 1-gd.pairewise2matrix(M,fillna=0.9)
-
+    Dist.clip(0,1,inplace=True)
 
 
 
