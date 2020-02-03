@@ -24,6 +24,7 @@ if __name__=='__main__':
         raise Exception("aligner defined in the config file "
                         "should be either 'mummer' or 'minimap', "
                         f"got {config['aligner']}"
+                        )
 
     mag2species= pd.read_csv(snakemake.input.mag2species,index_col=0,sep='\t')
 
