@@ -1,4 +1,4 @@
-import pandas as pd
+Identityimport pandas as pd
 
 import scipy.spatial as sp
 import scipy.cluster.hierarchy as hc
@@ -14,14 +14,24 @@ if __name__=='__main__':
     linkage_method= snakemake.params.linkage_method
     treshold = 0.995
     quality_score_formula = snakemake.config['quality_score']
-    M= pd.read_csv(snakemake.input.dists,index_col=[0,1],sep='\t')
+
+
+    if snakemake.config['aligner']=='mummer':
+        M= gd.load_mummer(snakemake.input.dists)
+    elif snakemake.config['aligner']=='minimap':
+        M= gd.load_minimap(snakemake.input.dists)
+    else:
+        raise Exception("aligner defined in the config file "
+                        "should be either 'mummer' or 'minimap', "
+                        f"got {config['aligner']}"
+
     mag2species= pd.read_csv(snakemake.input.mag2species,index_col=0,sep='\t')
 
     M['Species']= mag2species.loc[M.index.get_level_values(0),'Species'].values
     M['Species2']= mag2species.loc[M.index.get_level_values(1),'Species'].values
     M= M.query('Species==Species2')
 
-    fraction_below_treshold= (M.ANI<treshold).groupby(M.Species).sum() / M.groupby('Species').size()
+    fraction_below_treshold= (M.Identity<treshold).groupby(M.Species).sum() / M.groupby('Species').size()
     have_strain_gap= (fraction_below_treshold >0.05)
 
     Strains= mag2species.copy()

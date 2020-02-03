@@ -55,8 +55,17 @@ if __name__=='__main__':
     Q= gd.load_quality(snakemake.input.quality)
     quality_score= Q.eval(quality_score_formula)
 
-    M= gd.load_mummer(snakemake.input.dists)
+    if snakemake.config['aligner']=='mummer':
+        M= gd.load_mummer(snakemake.input.dists)
+    elif snakemake.config['aligner']=='minimap':
+        M= gd.load_minimap(snakemake.input.dists)
+    else:
+        raise Exception("aligner defined in the config file "
+                        "should be either 'mummer' or 'minimap', "
+                        f"got {config['aligner']}"
+                        )
     Dist= 1-gd.pairewise2matrix(M,fillna=0.9)
+
 
 
 
