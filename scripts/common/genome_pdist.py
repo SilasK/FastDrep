@@ -123,6 +123,12 @@ def load_mummer(dist_file):
     M['Identity']=M.ANI
     return M
 
+def load_minimap(dist_file):
+
+    M=pd.read_csv(dist_file,sep='\t',index_col=[0,1])
+    return M
+
+
 def to_graph(F,attributes=None,**kws):
 
     df= F.copy()
