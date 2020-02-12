@@ -1,6 +1,7 @@
 import pyfastx
 from multiprocessing import Pool
 import pandas as pd
+from numpy import log
 import os
 from .io import simplify_path
 
@@ -32,4 +33,5 @@ def get_many_genome_stats(filenames,output_filename,threads=1):
 
     results= pool.map(genome_stats,filenames)
     Stats= pd.DataFrame(results,columns=["Genome","Length", "Nseqs","N50","L50"])
+    Stats['logL50']=log(Stats.L50)
     Stats.to_csv(output_filename,sep='\t',index=False)
