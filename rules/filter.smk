@@ -117,7 +117,7 @@ if 'genome_qualities' in config:
             Q= gd.load_quality(input.quality)
             assert not Q.index.duplicated().any(), f"duplicated indexes in {input.quality}"
 
-            stats= pd.read_csv(input.stts,index_col=0)
+            stats= pd.read_csv(input.stats,index_col=0)
             stats['logL50']=log(stats.L50)
             Q=Q.join(stats[Q.columns.difference(stats.columns)])
 
