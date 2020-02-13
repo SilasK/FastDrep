@@ -105,7 +105,7 @@ checkpoint filter_sketch:
         treshold=config['pre_cluster_treshold'],
         N=config['subset_size_alignments']
     benchmark:
-        "logs/benchmark/filter_sketch.txt"
+        "logs/benchmark/filter_sketch_{aligner}.txt"
     resources:
         mem=config['mem']
     run:
