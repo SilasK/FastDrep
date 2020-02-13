@@ -85,7 +85,7 @@ else:
 
 
 if 'genome_qualities' in config:
-    ruleorder: get_predifined_quality> combine_checkm_quality
+#    ruleorder: get_predifined_quality> combine_checkm_quality
     rule get_predifined_quality:
         input:
             config['genome_qualities']
