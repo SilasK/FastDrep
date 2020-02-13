@@ -131,11 +131,12 @@ if 'genome_qualities' in config:
 
             missing_quality= Filenames.index.difference(intersection)
             if len(missing_quality) >0:
-                logger.error(f"missing quality information for following files: {missing_quality}")
+                raise Exception(f"missing quality information for following files: {missing_quality}")
 
             missing_fasta= Q.index.difference(intersection)
             if len(missing_fasta) >0:
-                logger.error(f"missing fasta file for following genomes: {missing_fasta}")
+                raise Exception(f"missing fasta file for following genomes: {missing_fasta}")
+
 
 
             Q= Q.loc[intersection]
