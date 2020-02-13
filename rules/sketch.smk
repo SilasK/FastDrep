@@ -95,7 +95,7 @@ rule bindash_dist:
         "--outfname={output} {input[0]} 2> {log}"
 
 
-localrules: filter_sketch
+
 checkpoint filter_sketch:
     input:
         f"tables/{config['sketcher']}_dists.tsv"
