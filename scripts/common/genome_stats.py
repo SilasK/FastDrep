@@ -14,9 +14,9 @@ def genome_stats(fasta_file,remove_index=True):
     name = simplify_path(fasta_file)
 
 
-    fata_index= fasta_file+'.fxi'
+    fasta_index= fasta_file+'.fxi'
     if os.path.exists(fasta_index):
-        os.remove(fata_index)
+        os.remove(fasta_index)
     try:
         fa = pyfastx.Fasta(fasta_file)
         N50,L50 =fa.nl(50)
@@ -28,7 +28,7 @@ def genome_stats(fasta_file,remove_index=True):
         raise Exception(f'Error in parsing file {fasta_file} with pyfastx\n') from e
 
     if remove_index:
-        os.remove(fata_index)
+        os.remove(fasta_index)
 
     return name,Length, n_seq,N50,L50
 
