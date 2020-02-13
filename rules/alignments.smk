@@ -4,7 +4,7 @@ rule calculate_stats:
     input:
         "tables/Genome_quality.tsv",
     output:
-        "filter/genome_stats.tsv"
+        "tables/genome_stats.tsv"
     threads:
         config['threads']
     log:
