@@ -104,6 +104,10 @@ checkpoint filter_sketch:
     params:
         treshold=config['pre_cluster_treshold'],
         N=config['subset_size_alignments']
+    benchmark:
+        "logs/benchmark/filter_sketch.txt"
+    resources:
+        mem=config['mem']
     run:
 
         F= gd.load_mash(input[0])
