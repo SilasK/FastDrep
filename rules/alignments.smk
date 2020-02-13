@@ -17,7 +17,7 @@ rule calculate_stats:
         from common.genome_stats import get_many_genome_stats
         import pandas as pd
         filenames= pd.read_csv(input[0],sep='\t',index_col=0,squeeze=True)
-        get_many_genome_stats(filenames.index,output[0],threads)
+        get_many_genome_stats(filenames.index+'.fasta',output[0],threads)
 
 
 
