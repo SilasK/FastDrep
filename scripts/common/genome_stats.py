@@ -33,5 +33,4 @@ def get_many_genome_stats(filenames,output_filename,threads=1):
 
     results= pool.map(genome_stats,filenames)
     Stats= pd.DataFrame(results,columns=["Genome","Length", "Nseqs","N50","L50"])
-    Stats['logL50']=log(Stats.L50)
     Stats.to_csv(output_filename,sep='\t',index=False)

@@ -103,6 +103,7 @@ if 'genome_qualities' in config:
             filenames=rules.filter_genomes_by_size.output.filenames,
             filtered_dir= rules.filter_genomes_by_size.output.dir,
             quality="filter/Genome_quality.tsv",
+            stats= "filter/genome_stats.tsv"
         output:
             filenames=temp(filtered_filenames)
         params:
@@ -110,10 +111,15 @@ if 'genome_qualities' in config:
         run:
             import pandas as pd
             from glob import glob
+            from numpy import log
 
 
             Q= gd.load_quality(input.quality)
             assert not Q.index.duplicated().any(), f"duplicated indexes in {input.quality}"
+
+            stats= pd.read_csv(input.stts,index_col=0)
+            stats['logL50']=log(stats.L50)
+            Q=Q.join(stats[Q.columns.difference(stats.columns)])
 
             Q['quality_score']= Q.eval(config['quality_score'])
 
