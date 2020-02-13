@@ -15,9 +15,6 @@ def genome_stats(fasta_file,remove_index=True):
     name = simplify_path(fasta_file)
 
 
-
-    # from Bio import SeqIO
-
     lengths = []
 
     with open(fasta_file) as fasta:
@@ -26,8 +23,8 @@ def genome_stats(fasta_file,remove_index=True):
 
         for record in faiter:
             ## join sequence lines
-            seq = "".join(s.strip() for s in faiter.__next__())
-            lengths.append(len(seq))
+            seqlen = sum(len(s.strip()) for s in faiter.__next__())
+            lengths.append(seqlen)
 
     ## sort contigs longest>shortest
     all_len=sorted(lengths, reverse=True)
