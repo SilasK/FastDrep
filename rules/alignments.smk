@@ -7,12 +7,8 @@ rule calculate_stats:
         "tables/genome_stats.tsv"
     threads:
         config['threads']
-    log:
-        "logs/minimap2/calculate_stats.txt"
     run:
-        import sys
-        sys.stdout = open(log[0], 'w')
-        sys.stderr = open(log[0], 'a')
+
 
         from common.genome_stats import get_many_genome_stats
         import pandas as pd

@@ -37,13 +37,7 @@ rule calculate_stats:
         "filter/genome_stats.tsv"
     threads:
         config['threads']
-    log:
-        "logs/filter/calculate_stats.txt"
     run:
-        import sys
-        sys.stdout = open(log[0], 'w')
-        sys.stderr = open(log[0], 'a')
-
         from common.genome_stats import get_many_genome_stats
         import pandas as pd
         filenames= pd.read_csv(input[0],sep='\t',index_col=0,squeeze=True)
