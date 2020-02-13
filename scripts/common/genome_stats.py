@@ -1,4 +1,4 @@
-import pyfastx
+
 from multiprocessing import Pool
 import pandas as pd
 import os,sys
@@ -8,7 +8,7 @@ import numpy as np
 
 
 def genome_stats(fasta_file,remove_index=True):
-    """Uses pyfastx to get genome stats from a fasta file. Outputs a tuple with:
+    """Get genome stats from a fasta file. Outputs a tuple with:
        name,Length, n_seq,N50
     """
 
