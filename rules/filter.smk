@@ -120,7 +120,7 @@ if 'genome_qualities' in config:
             stats= pd.read_csv(input.stats,index_col=0,sep='\t')
             stats['logN50']=log(stats.N50)
 
-            Q=Q.join(stats[stats.columns.difference(Q.columns)])
+            Q=Q.join(stats.loc[Q.index,stats.columns.difference(Q.columns)])
 
             Q['quality_score']= Q.eval(config['quality_score'])
 
