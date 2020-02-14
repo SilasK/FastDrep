@@ -133,9 +133,9 @@ if 'genome_qualities' in config:
             if len(missing_quality) >0:
                 raise Exception(f"missing quality information for following files: {missing_quality}")
 
-            missing_fasta= Q.index.difference(intersection)
-            if len(missing_fasta) >0:
-                raise Exception(f"missing fasta file for following genomes: {missing_fasta}")
+            #missing_fasta= Q.index.difference(intersection)
+            #if len(missing_fasta) >0:
+            #    raise Exception(f"missing fasta file for following genomes: {missing_fasta}")
 
 
 
