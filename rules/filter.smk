@@ -209,7 +209,7 @@ checkpoint rename_genomes:
         Stats= Stats.rename(index=Mapping.Genome).loc[Mapping.Genome]
         Stats.to_csv(output.stats,sep='\t')
 
-
+#TODO: joun logN50 to quality for cluster_species
 rule rename_quality:
     input:
         mapping= rules.rename_genomes.output.mapping,
