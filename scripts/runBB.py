@@ -24,6 +24,9 @@ def run_bb(command,*args,log=None,**kwargs):
             command += f' 2>>{log}'
         else:
             command += f' 2>{log}'
+    else:
+        command += f' 2> /dev/null'
+
 
     #print(f"{command}")
     shell(command)
