@@ -37,6 +37,8 @@ rule bbsketch_mags:
         time= 16
     log:
         "logs/bbsketch/sketch_mags_{NTorAA}.log"
+    benchmark:
+        "logs/benchmark/bbsketch/sketch_mags_{NTorAA}.txt"
     conda:
         "../envs/bbmap.yaml"
     threads:
@@ -64,6 +66,8 @@ rule allvall:
         "../envs/bbmap.yaml"
     resources:
         mem= 50
+    benchmark:
+        "logs/benchmark/bbsketch/alltoall_{NTorAA}.txt"
     log:
         "logs/bbsketch/alltoall_{NTorAA}.log"
     threads:
