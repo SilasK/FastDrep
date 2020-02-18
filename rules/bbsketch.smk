@@ -72,7 +72,7 @@ rule mergesketch_mags:
     threads:
         16
     resources:
-        mem=5
+        mem=5,
         time=5
     run:
         io.cat_files(input,output[0],gzip=False)
