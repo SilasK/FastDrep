@@ -28,7 +28,7 @@ def run_bb(command,*args,log=None,**kwargs):
         command += f' 2> /dev/null'
 
 
-    #print(f"{command}")
+    print(f"{command}")
     shell(command)
 
 
@@ -39,7 +39,16 @@ if __name__ == '__main__':
     else:
         log=None
 
+    resources=dict(threads=snakemake.threads)
+
+    print(hasattr(snakemake.resources,'mem'))
+
+    if hasattr(snakemake.resources,'mem'):
+        resources['mem']=snakemake.resources['mem']
+
+
     run_bb(log = log,
+           **resources,
            **snakemake.input,
            **snakemake.params,
            **snakemake.output)
