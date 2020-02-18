@@ -37,7 +37,7 @@ rule all_bbsketch:
     input:
         "tables/bbsketch_aa.tsv",
         "tables/bbsketch_nt.tsv",
-        "bbsketch/mags_aa.sketch.gz"
+        "tables/mapping2refseq_aa.sketch.gz"
 
 rule all_species:
     input:

@@ -76,7 +76,7 @@ rule sendsketch:
     input:
         "bbsketch/mags_aa.sketch.gz"
     output:
-        "bbsketch/mags_aa.sketch.gz"
+        "tables/mapping2refseq_aa.sketch.gz"
     params:
         minid=0.9
     log:
