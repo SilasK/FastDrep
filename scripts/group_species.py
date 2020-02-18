@@ -90,7 +90,7 @@ if __name__=='__main__':
                                                            speciesNr+N_missing_species)+1
 
     Scores['N_clusters']+=N_missing_species
-    Scores.to_csv(snakemake.output.scores,sep='\t')
+    Scores.to_csv(snakemake.output.scores,sep='\t',index=False)
 
     assert Scores.loc[Scores.Silhouette_score.idxmax(),'N_clusters']==mag2Species.SpeciesNr.max(), "error in calculation of N species"
     print(f"Identified { mag2Species.SpeciesNr.max()} species")
