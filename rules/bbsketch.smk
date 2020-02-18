@@ -25,7 +25,7 @@ rule bbsketch:
         "../scripts/runBB.py"
 
 
-localrules: mergesketch
+
 rule mergesketch:
     input:
         lambda wildcards: expand("bbsketch/sketches_{{NTorAA}}/{genome}.sketch.gz",
@@ -59,7 +59,7 @@ def mergesketch_mags_input(wildcards):
 
     return sketches
 
-localrules: mergesketch_mags
+
 rule mergesketch_mags:
     input:
         mergesketch_mags_input
