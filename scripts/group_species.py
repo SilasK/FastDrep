@@ -20,7 +20,7 @@ def automatic_cluster_species(Dist,seed_tresholds= [0.92,0.97],linkage_method='a
 
     N_range= [get_Nclusters(t) for t in seed_tresholds]
 
-    if (N_range[1]-N_range[0])< 100:
+    if (N_range[1]-N_range[0])> 100:
         print(f"Need to evaluate more than {N_range[1]-N_range[0]} tresholds")
 
     assert ~np.isnan(N_range).any(), "N range is not defined"
@@ -86,17 +86,20 @@ if __name__=='__main__':
     speciesNr= labels.max()
     missing_species=mag2Species.SpeciesNr.isnull()
     N_missing_species= sum(missing_species)
-    mag2Species.loc[missing_species,'SpeciesNr']=np.arange(speciesNr+1,
-                                                           speciesNr+1+N_missing_species)
+    mag2Species.loc[missing_species,'SpeciesNr']=np.arange(speciesNr,
+                                                           speciesNr+N_missing_species)+1
 
+    Scores['N_clusters']+=N_missing_species
+    Scores.to_csv(snakemake.output.scores,sep='\t')
+
+    assert Scores.loc[Scores.Silhouette_score.idxmax(),'N_clusters']==mag2Species.SpeciesNr.max(), "error in calculation of N species"
     print(f"Identified { mag2Species.SpeciesNr.max()} species")
 
     n_leading_zeros= len(str(max(labels)))
     format_int='sp{:0'+str(n_leading_zeros)+'d}'
     mag2Species['Species']=mag2Species.SpeciesNr.apply(format_int.format)
 
-    Scores['N_clusters']+=N_missing_species
-    Scores.to_csv(snakemake.output.scores,sep='\t')
+
 
     mag2Species['Representative_Species']=gd.best_genome_from_table(mag2Species.Species,quality_score)
 
