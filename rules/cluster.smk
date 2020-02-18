@@ -4,7 +4,7 @@
 
 ANI_file= f"tables/{config['aligner']}_dists.tsv"
 
-localrules: cluster_species,get_representatives
+localrules: get_representatives
 checkpoint cluster_species:
     input:
         dists=ANI_file,
@@ -29,7 +29,7 @@ def get_species(wildcards):
 
 
 
-localrules: cluster_strains
+
 checkpoint cluster_strains:
     input:
         dists=ANI_file,
