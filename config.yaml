@@ -1,5 +1,7 @@
 threads: 8
 mem: 250
+runtime: 5
+
 sketcher: "bindash" # use bindash or mash for sketching
 sketch_k: 21
 sketch_size: 10000

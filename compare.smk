@@ -43,3 +43,12 @@ rule all_species:
     input:
         "tables/refseq_mapping_species.tsv",
         "representatives/species",
+
+
+for r in workflow.rules:
+    if not "mem" in r.resources:
+        r.resources["mem"]=config["mem"]
+    if not "time" in r.resources:
+        r.resources["time"]=config["runtime"]
+
+#
