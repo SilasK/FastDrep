@@ -94,4 +94,4 @@ rule sendsketch:
     benchmark:
         "logs/benchmark/bbsketch/sendsketch.txt"
     shell:
-        "sendsketch.sh in={input} out={output} protein format=3 minid={params.minid} usetaxidname=t 2> {log}"
+        "sendsketch.sh in={input} out={output} protein format=3 minid={params.minid} 2> {log}"
