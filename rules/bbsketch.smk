@@ -62,6 +62,8 @@ rule allvall:
         command="comparesketch.sh alltoall",
         format=3,
         k=lambda wildcards: config['bbsketch'][wildcards.NTorAA]['k'],
+    shadow:
+        "minimal"
     conda:
         "../envs/bbmap.yaml"
     resources:
