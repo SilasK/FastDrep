@@ -50,7 +50,7 @@ rule allvall:
     conda:
         "../envs/bbmap.yaml"
     resources:
-        mem= mem=config['mem']['large']
+        mem= config['mem']['large']
     benchmark:
         "logs/benchmark/bbsketch/alltoall_{NTorAA}.txt"
     log:
