@@ -119,7 +119,7 @@ checkpoint filter_sketch:
 
         fout=None
         for i,e in enumerate(G.edges()):
-            if (i % params.N) ==0:
+            if (i % int(params.N)) ==0:
                 n= int(i // params.N )+1
                 if fout is not None: fout.close()
                 fout= open(f"{output[0]}/subset_{n}.txt",'w')

@@ -30,6 +30,8 @@ rule many_minimap:
         "logs/minimap2/{subset}.txt"
     threads:
         config['threads']
+    resources:
+        time=config['runtime']['minimap']
     conda:
         "../envs/minimap2.yaml"
     params:
