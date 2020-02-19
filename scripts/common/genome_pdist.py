@@ -40,7 +40,7 @@ def load_ani_table_(dist_file,header=None,simplify_names=False):
 
 
 
-def load_bbsketch(dist_file,format=3):
+def load_bbsketch(dist_file,format=3,simplify_names=True):
     """ reads output of sendsketch.sh
         format=3 [query,ref,ANI..]
         format=2 Table for one query
@@ -54,6 +54,13 @@ def load_bbsketch(dist_file,format=3):
             bbs.drop(['QTaxID','RTaxID'],axis=1,inplace=True)
 
         bbs['Identity']= bbs.iloc[:,0]/100.
+
+
+
+        if simplify_names:
+
+            bbs.index =pd.MultiIndex(levels= [simplify_index(bbs.index.levels[0]),
+                                    simplify_index(bbs.index.levels[1])],codes= bbs.index.codes  )
 
         return bbs
     elif format==2:
