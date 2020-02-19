@@ -8,7 +8,7 @@ sketch_max_dist: 0.2
 
 aligner: minimap  # minimap or mummer
 pre_cluster_treshold: 0.1
-subset_size_alignments: 5000
+subset_size_alignments: 1e5
 minimap_extra: "-c --secondary=no -x asm20"
 
 fastani:
