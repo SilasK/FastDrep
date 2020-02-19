@@ -55,6 +55,9 @@ def load_bbsketch(dist_file,format=3,simplify_names=True):
 
         bbs['Identity']= bbs.iloc[:,0]/100.
 
+        if 'SSU' in bbs:
+            bb['SSU']=bb.SSU.replace('.',np.nan)
+
 
 
         if simplify_names:
