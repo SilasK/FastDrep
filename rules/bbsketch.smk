@@ -1,22 +1,6 @@
 
 
 
-# rule mergesketch:
-#     input:
-#         lambda wildcards: expand("bbsketch/sketches_{{NTorAA}}/{genome}.sketch.gz",
-#                genome=get_representatives(wildcards))
-#     wildcard_constraints:
-#         NTorAA="(aa|nt)",
-#         resolution_level="(species|strains)"
-#     group:
-#         "bbsketch"
-#     output:
-#         out="bbsketch/{resolution_level}_{NTorAA}.sketch.gz"
-#     threads:
-#         1
-#     run:
-#         io.cat_files(input,output[0],gzip=False)
-#
 
 
 
