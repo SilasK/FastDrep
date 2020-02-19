@@ -20,14 +20,14 @@ def many_minimap(alignment_list,genome_folder,paf_folder,extension='.fasta'):
     with open(alignment_list) as f:
         for line in f:
             genome1,genome2= line.strip().split()
-            paf= os.path.join(paf_folder,f"{genome1}-{genome2}.paf")
 
-            ref= os.path.join(genome_folder,genome1+extension)
-            query =os.path.join(genome_folder,genome2+extension)
+            paf= os.path.join(paf_folder,f"{genome1}/{genome2}.paf")
 
-
-            #if not os.path.exists(paf):
-            run_minimap(ref,query,paf)
+            if not os.path.exists(paf):
+                os.makedirs(os.path.join(paf_folder,genome1),exist_ok=True)
+                ref= os.path.join(genome_folder,genome1+extension)
+                query =os.path.join(genome_folder,genome2+extension)
+                run_minimap(ref,query,paf)
             paf_files.append(paf)
 
     return paf_files
