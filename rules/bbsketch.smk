@@ -16,7 +16,6 @@ rule bbsketch_mags:
         translate=lambda wildcards: wildcards.NTorAA=='aa',
         overwrite=True,
         command=f"bbsketch.sh perfile {genome_folder}/*.fasta",
-        blacklist="refseq"
     resources:
         mem= 10,
         time= 10
