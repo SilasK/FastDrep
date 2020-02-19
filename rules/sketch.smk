@@ -107,7 +107,7 @@ checkpoint filter_sketch:
     benchmark:
         "logs/benchmark/filter_sketch_{aligner}.txt"
     resources:
-        mem=config['mem']
+        mem=config['mem']['large']
     run:
 
         F= gd.load_mash(input[0])

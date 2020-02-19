@@ -47,7 +47,7 @@ rule all_species:
 
 for r in workflow.rules:
     if not "mem" in r.resources:
-        r.resources["mem"]=config["mem"]
+        r.resources["mem"]=config["mem"]['default']
     if not "time" in r.resources:
         r.resources["time"]=config["runtime"]["default"]
 

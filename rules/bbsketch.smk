@@ -17,7 +17,6 @@ rule bbsketch_mags:
         overwrite=True,
         command=f"bbsketch.sh perfile {genome_folder}/*.fasta",
     resources:
-        mem= 10,
         time= 10
     log:
         "logs/bbsketch/sketch_mags_{NTorAA}.log"
@@ -51,7 +50,7 @@ rule allvall:
     conda:
         "../envs/bbmap.yaml"
     resources:
-        mem= 50
+        mem= mem=config['mem']['large']
     benchmark:
         "logs/benchmark/bbsketch/alltoall_{NTorAA}.txt"
     log:
@@ -76,7 +75,7 @@ rule sendsketch:
     threads:
         1
     resources:
-        mem= 50,
+        mem= mem=config['mem']['large'],
     benchmark:
         "logs/benchmark/bbsketch/sendsketch.txt"
     shell:

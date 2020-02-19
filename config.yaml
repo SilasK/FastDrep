@@ -1,5 +1,7 @@
 threads: 8
-mem: 250
+mem:
+  default: 5
+  large: 100
 runtime:
   default: 5
   minimap: 12
