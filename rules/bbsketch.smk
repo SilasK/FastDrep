@@ -75,7 +75,7 @@ rule sendsketch:
     threads:
         1
     resources:
-        mem= mem=config['mem']['large'],
+        mem= config['mem']['large'],
     benchmark:
         "logs/benchmark/bbsketch/sendsketch.txt"
     shell:
