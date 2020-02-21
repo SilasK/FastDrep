@@ -97,7 +97,7 @@ def parse_paf_files(paf_files,genome_stats_file,output_file):
 
             M.sort_values('Identity',inplace=True,ascending=False)
 
-            genome1,genome2 = os.path.splitext(os.path.split(paf_file)[-1])[0].split('-')
+            genome1,genome2 = os.path.splitext(paf_file)[0].split(os.path.sep)[-2:]
             Identity = (M.Identity*M.Allength).sum() / M.Allength.sum()
             Length= M.Allength.sum()
 
