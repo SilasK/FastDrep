@@ -22,13 +22,13 @@ rule run_mummer:
         ref=path.join(genome_folder,"{ref}.fasta"),
         query=path.join(genome_folder,"{query}.fasta")
     output:
-        "mummer/delta/{ref}-{query}.delta"
+        "mummer/delta/{ref}/{query}.delta"
     params:
-        out_prefix= "mummer/delta/{ref}-{query}",
+        out_prefix= "mummer/delta/{ref}/{query}",
         options="--mincluster 65 --maxgap 90 ",
         method= "mum"
     log:
-        "logs/mummer/mummer/{ref}-{query}.txt"
+        "logs/mummer/mummer/{ref}/{query}.txt"
     threads:
         1
     shell:
@@ -38,7 +38,7 @@ rule delta_filter:
     input:
         rules.run_mummer.output[0]
     output:
-        temp("mummer/delta/{ref}-{query}.delta.filtered")
+        pipe("mummer/delta/{ref}/{query}.delta.filtered")
     params:
         options="-r -q"
     shell:
@@ -64,7 +64,7 @@ rule parse_delta:
     input:
         rules.delta_filter.output[0]
     output:
-        temp("mummer/delta/{ref}-{query}.txt")
+        temp("mummer/delta/{ref}/{query}.txt")
     run:
 
         aln_length, sim_errors = parse_delta(input[0])
@@ -75,7 +75,7 @@ rule parse_delta:
 
 rule combine:
     input:
-        ["mummer/delta/{}-{}.txt".format(*pair) for pair in comparisons]
+        ["mummer/delta/{}/{}.txt".format(*pair) for pair in comparisons]
     output:
         temp(f"mummer/ANI/{subset}.txt")
     run:
