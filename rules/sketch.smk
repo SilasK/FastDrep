@@ -25,6 +25,8 @@ rule mash_sketch_genome:
         "../envs/mash.yaml"
     log:
         "logs/mash/sketch.log"
+    benchmark:
+        "logs/benchmark/mash_sketch.txt"
     shell:
         "mash sketch -o {params.out_name} -p {threads} -s {params.s} -k {params.k} -l {input[0]} 2> {log}"
 
@@ -42,6 +44,8 @@ rule mash_calculate_dist:
         "../envs/mash.yaml"
     log:
         "logs/mash/dist.log"
+    benchmark:
+        "logs/benchmark/mash_dists.txt"
     shell:
         "mash dist -p {threads} -d {params.d} "
         "{input.genomes} {input.genomes} > {output[0]} 2> {log}"
@@ -64,6 +68,8 @@ rule bindash_sketch_genome:
         "../envs/bindash.yaml"
     log:
         "logs/bindash/sketch.log"
+    benchmark:
+        "logs/benchmark/bindash_sketch.txt"
     shell:
         "bindash sketch "
         "--outfname={output[0]} "
@@ -86,6 +92,8 @@ rule bindash_dist:
         "../envs/bindash.yaml"
     log:
         "logs/bindash/dist.log"
+    benchmark:
+        "logs/benchmark/bindash_dist.txt"
     shell:
         "bindash dist "
         "--nthreads={threads} "
