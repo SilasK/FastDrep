@@ -91,7 +91,7 @@ rule run_mummer:
         "../envs/mummer.yaml"
     resources:
         time= lambda wc, input, threads: estimate_time_mummer(config['subset_size_alignments'],threads),
-        mem= config.get('mummer_mem',5)
+        mem=config['mem']['minimap']
     log:
         "logs/mummer/workflows/{subset}.txt"
     params:
