@@ -28,6 +28,8 @@ rule many_minimap:
         alignments_stats="minimap/alignments_stats/{subset}.tsv",
     log:
         "logs/minimap2/{subset}.txt"
+    benchmark:
+        "logs/benchmarks/minimap/{subset}.txt"
     threads:
         config['threads']
     resources:
@@ -94,6 +96,8 @@ rule run_mummer:
         mem=config['mem'].get('mummer',20)
     log:
         "logs/mummer/workflows/{subset}.txt"
+    benchmark:
+        "logs/benchmarks/mummer/{subset}.txt"
     params:
         path= os.path.dirname(workflow.snakefile)
     shell:
