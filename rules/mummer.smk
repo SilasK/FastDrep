@@ -38,7 +38,7 @@ rule delta_filter:
     input:
         rules.run_mummer.output[0]
     output:
-        pipe("mummer/delta/{ref}/{query}.delta.filtered")
+        temp("mummer/delta/{ref}/{query}.delta.filtered")
     params:
         options="-r -q"
     shell:
