@@ -84,15 +84,15 @@ else:
     localrules: get_predifined_quality, combine_checkm_quality
 
 
-if 'genome_qualities' in config:
-    ruleorder: get_predifined_quality> merge_checkm
-    rule get_predifined_quality:
-        input:
-            config['genome_qualities']
-        output:
-            "filter/Genome_quality.tsv"
-        shell:
-            "cp {input} {output}"
+    if 'genome_qualities' in config:
+        ruleorder: get_predifined_quality> merge_checkm
+        rule get_predifined_quality:
+            input:
+                config['genome_qualities']
+            output:
+                "filter/Genome_quality.tsv"
+            shell:
+                "cp {input} {output}"
 
 
 
