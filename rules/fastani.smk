@@ -52,7 +52,7 @@ rule fastANI:
         " --queryList {input.list1} --refList {input.list2} "
         " -k {config[fastani][k]} "
         " --minFraction {config[fastani][minFraction]} "
-        " {config[fastani].get('extra','')} "
+        " {config[fastani]['extra']} "
         " -o {output} "
         " 2> {log}"
 

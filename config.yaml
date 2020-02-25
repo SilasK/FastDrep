@@ -20,6 +20,7 @@ fastani:
   k: 16
   minFraction: 0.2
   subset_size: 1000
+  extra: ""
 bbsketch:
   aa:
     k: "9,12"
