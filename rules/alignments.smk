@@ -109,7 +109,7 @@ rule run_mummer:
 
 def get_merge_mummer_ani_input(wildcards):
 
-    subsets=get_mummer_subsets(aligner="mummer")
+    subsets=get_alignment_subsets(aligner="mummer")
 
     return expand("mummer/ANI/{subset}.tsv",subset=subsets)
 
