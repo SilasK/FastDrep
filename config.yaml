@@ -18,9 +18,8 @@ minimap_extra: "-c --secondary=no -x asm20"
 
 fastani:
   k: 16
-  fragLen: 3000
-  minFraction: 0.3
-  subset_size: 100
+  minFraction: 0.2
+  subset_size: 1000
 bbsketch:
   aa:
     k: "9,12"
