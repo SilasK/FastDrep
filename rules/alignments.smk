@@ -90,7 +90,7 @@ rule run_mummer:
     conda:
         "../envs/mummer.yaml"
     resources:
-        time= lambda wc, input, threads: estimate_time_mummer(config['subset_size'],threads),
+        time= lambda wc, input, threads: estimate_time_mummer(config['subset_size_alignments'],threads),
         mem= config.get('mummer_mem',5)
     log:
         "logs/mummer/workflows/{subset}.txt"
