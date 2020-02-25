@@ -36,7 +36,6 @@ rule mash_calculate_dist:
         "tables/mash_dists.txt"
     params:
         d= config['sketch_max_dist'],
-        k= config['sketch_k']
     threads:
         config['threads']
     conda:
@@ -45,7 +44,6 @@ rule mash_calculate_dist:
         "logs/mash/dist.log"
     shell:
         "mash dist -p {threads} -d {params.d} "
-        " -k {params.k} "
         "{input.genomes} {input.genomes} > {output[0]} 2> {log}"
 
 
