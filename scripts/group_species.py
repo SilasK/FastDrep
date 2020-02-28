@@ -56,6 +56,8 @@ if __name__=='__main__':
     Q= gd.load_quality(snakemake.input.quality)
     quality_score= Q.eval(quality_score_formula)
 
+    assert not quality_score.isnull().any(),"I have NA quality values for thq quality score, it seems not all of the values defined in the quality_score_formula are presentfor all entries in tables/Genome_quality.tsv "
+
     if snakemake.config['aligner']=='mummer':
         M= gd.load_mummer(snakemake.input.dists)
     elif snakemake.config['aligner']=='minimap':
