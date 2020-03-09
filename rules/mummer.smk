@@ -42,7 +42,7 @@ rule delta_filter:
     params:
         options="-r -q"
     shell:
-        "delta-filter {params.options} < {input} > {output}"
+        "delta-filter {params.options} {input} > {output}"
 
 
 def parse_delta(filename):
