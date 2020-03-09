@@ -25,7 +25,7 @@ rule run_mummer:
         pipe("mummer/delta/{ref}/{query}.delta")
     params:
         out_prefix= "mummer/delta/{ref}/{query}",
-        options=config['mummer_options'],
+        options= "--mincluster 65 --maxgap 90 ",
         method= "mum"
     log:
         "logs/mummer/mummer/{ref}/{query}.txt"

@@ -15,7 +15,6 @@ aligner: mummer  # minimap or mummer
 pre_cluster_treshold: 0.1
 subset_size_alignments: 5000
 minimap_extra: "-c --secondary=no -x asm20"
-mummer_options: --mincluster 65 --maxgap 90 "
 
 fastani:
   k: 16
