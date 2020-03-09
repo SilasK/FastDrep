@@ -22,7 +22,7 @@ rule run_mummer:
         ref=path.join(genome_folder,"{ref}.fasta"),
         query=path.join(genome_folder,"{query}.fasta")
     output:
-        pipe("mummer/delta/{ref}/{query}.delta")
+        temp("mummer/delta/{ref}/{query}.delta")
     params:
         out_prefix= "mummer/delta/{ref}/{query}",
         options= "--mincluster 65 --maxgap 90 ",
