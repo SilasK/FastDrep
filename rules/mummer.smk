@@ -22,10 +22,10 @@ rule run_mummer:
         ref=path.join(genome_folder,"{ref}.fasta"),
         query=path.join(genome_folder,"{query}.fasta")
     output:
-        "mummer/delta/{ref}/{query}.delta"
+        pipe("mummer/delta/{ref}/{query}.delta")
     params:
         out_prefix= "mummer/delta/{ref}/{query}",
-        options="--mincluster 65 --maxgap 90 ",
+        options=config['mummer_options'],
         method= "mum"
     log:
         "logs/mummer/mummer/{ref}/{query}.txt"
@@ -38,11 +38,11 @@ rule delta_filter:
     input:
         rules.run_mummer.output[0]
     output:
-        temp("mummer/delta/{ref}/{query}.delta.filtered")
+        "mummer/delta/{ref}/{query}.delta.filtered"
     params:
         options="-r -q"
     shell:
-        "delta-filter {params.options} {input} > {output}"
+        "delta-filter {params.options} < {input} > {output}"
 
 
 def parse_delta(filename):
