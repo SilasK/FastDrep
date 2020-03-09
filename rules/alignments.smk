@@ -98,6 +98,8 @@ rule run_mummer:
         "logs/mummer/workflows/{subset}.txt"
     benchmark:
         "logs/benchmarks/mummer/{subset}.txt"
+    benchmark:
+        "logs/benchmarks/mummer/{subset}.txt"
     params:
         path= os.path.dirname(workflow.snakefile)
     shell:
