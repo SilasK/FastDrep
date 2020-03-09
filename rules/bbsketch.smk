@@ -43,6 +43,7 @@ rule allvall:
         amino=lambda wildcards: wildcards.NTorAA=='aa',
         overwrite=True,
         command="comparesketch.sh alltoall",
+        prealloc=0.75,
         format=3,
         k=lambda wildcards: config['bbsketch'][wildcards.NTorAA]['k'],
     shadow:
