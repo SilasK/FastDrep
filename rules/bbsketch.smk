@@ -34,8 +34,7 @@ rule bbsketch_mags:
 
 rule allvall:
     input:
-        ref="bbsketch/mags_{NTorAA}.sketch.gz",
-        input="bbsketch/mags_{NTorAA}.sketch.gz"
+        ref="bbsketch/mags_{NTorAA}.sketch.gz"
     output:
         out="tables/bbsketch_{NTorAA}.tsv"
     wildcard_constraints:
@@ -43,7 +42,7 @@ rule allvall:
     params:
         amino=lambda wildcards: wildcards.NTorAA=='aa',
         overwrite=True,
-        command="comparesketch.sh ",
+        command="comparesketch.sh alltoall",
         prealloc=0.75,
         format=3,
         k=lambda wildcards: config['bbsketch'][wildcards.NTorAA]['k'],
@@ -54,9 +53,9 @@ rule allvall:
     resources:
         mem= config['mem']['large']
     benchmark:
-        "logs/benchmark/bbsketch/compare_{NTorAA}.txt"
+        "logs/benchmark/bbsketch/alltoall_{NTorAA}.txt"
     log:
-        "logs/bbsketch/compare_{NTorAA}.log"
+        "logs/bbsketch/alltoall_{NTorAA}.log"
     threads:
         config['threads']
     script:
