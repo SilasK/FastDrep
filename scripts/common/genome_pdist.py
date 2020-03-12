@@ -24,7 +24,8 @@ def load_ani_table_(dist_file,header=None,simplify_names=False):
 
     F = pd.read_csv(dist_file,sep='\t',header=None,index_col=[0,1])
 
-    F.columns= header
+    if header is not None:
+        F.columns= header
     F.index.names=['Genome1','Genome2']
 
     if simplify_names:
