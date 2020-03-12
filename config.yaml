@@ -29,8 +29,8 @@ bbsketch:
 species_treshold: 'auto' # ]0.9-1[ or 'auto' / auto detects best treshold in range [0.92,0.97]
 genome_folder: 'all_bins'
 genome_qualities: 'Checkm_quality_allbins.tsv'
-quality_score: 'completeness-5*contamination-0.5*strain_heterogeneity+0.5*logN50'
-qualityfilter_criteria: 'quality_score>=50' # use "quality_score" for the above definition
+quality_score: 'completeness-5*contamination+0.5*logN50'
+qualityfilter_criteria: 'completeness-5*contamination>=50' # use "quality_score" for the above definition
 filter_criteria: "N50>5000"
 rename_method: "prefix"
 mag_prefix: "MAG"
