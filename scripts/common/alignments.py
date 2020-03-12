@@ -68,7 +68,7 @@ def load_paf(paf_file):
         M=pd.DataFrame(parsed).dropna(how='all')
 
         # some values are 0.0000, some are negative
-        M['Identity']= 1- M.de #.replace('0.0000',0.00005).astype(float).apply(lambda d: max(d,0))
+        M['Identity']= 1- M.de.clip(0,1) #.replace('0.0000',0.00005).astype(float).apply(lambda d: max(d,0))
 
         headers=MINIMAP_HEADERS+['Identity']
         #rearange headers
@@ -88,7 +88,7 @@ def parse_paf_files(paf_files,genome_stats_file,output_file):
 
         out.write("\t".join(['genome1','genome2','Identity','Length',
                              'Length_at99id','Length_at95id','Id_at90length','Id_at50length',
-                             'AlignedFraction','AlignedFraction95','AlignedFraction99'])+'\n')
+                             'Coverage','Coverage95','Coverage99'])+'\n')
 
         for paf_file in paf_files:
 
