@@ -199,11 +199,18 @@ checkpoint rename_genomes:
 
         os.makedirs(output.genome_folder)
 
+
+        # symlink genome to original fasta file
         for _,row in Mapping.iterrows():
 
-            shutil.copy(row.FilenameOriginal,
-                        row.Filename
-                        )
+            # shutil.copy(row.FilenameOriginal,
+            #             row.Filename
+            #             )
+            os.symlink(
+                       os.path.relpath(row.FilenameOriginal, output.genome_folder),
+                       row.Filename
+                      )
+
         #Rename stats
         Stats= pd.read_csv(input.stats, sep='\t',index_col=0)
         Stats= Stats.rename(index=Mapping.Genome).loc[Mapping.Genome]
