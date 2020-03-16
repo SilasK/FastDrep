@@ -14,10 +14,14 @@ def simplify_index(index):
 
 
     path= index[0]
-    extension= os.path.splitext(path)[-1]
+    filename,extension= os.path.splitext(path)
+
+    if extension=='.gz':
+        extension=  os.path.splitext(filename)[-1] + extension
+
     dir_name= os.path.dirname(path)+'/'
 
-    return index.str.replace(extension,'').str.replace(dir_name,'')
+    return pd.Index(index).str.replace(extension,'').str.replace(dir_name,'')
 
 
 def load_ani_table_(dist_file,header=None,simplify_names=False):
