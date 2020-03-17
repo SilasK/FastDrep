@@ -20,10 +20,11 @@ if __name__=='__main__':
         M= gd.load_mummer(snakemake.input.dists)
     elif snakemake.config['aligner']=='minimap':
         M= gd.load_minimap(snakemake.input.dists)
+    elif snakemake.config['aligner']=='bindash':
+        M= gd.load_bindash(snakemake.input.dists)
     else:
         raise Exception("aligner defined in the config file "
-                        "should be either 'mummer' or 'minimap', "
-                        f"got {config['aligner']}"
+                        "should be either 'mummer' or 'minimap' "
                         )
 
     mag2species= pd.read_csv(snakemake.input.mag2species,index_col=0,sep='\t')

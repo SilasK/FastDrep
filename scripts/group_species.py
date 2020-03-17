@@ -62,10 +62,11 @@ if __name__=='__main__':
         M= gd.load_mummer(snakemake.input.dists)
     elif snakemake.config['aligner']=='minimap':
         M= gd.load_minimap(snakemake.input.dists)
+    elif snakemake.config['aligner']=='bindash':
+        M= gd.load_bindash(snakemake.input.dists)
     else:
         raise Exception("aligner defined in the config file "
-                        "should be either 'mummer' or 'minimap', "
-                        f"got {config['aligner']}"
+                        "should be either 'mummer' or 'minimap' "
                         )
     Dist= 1-gd.pairewise2matrix(M,fillna=0.9)
     Dist.clip(0,1,inplace=True)
