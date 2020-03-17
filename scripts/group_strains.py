@@ -58,7 +58,7 @@ if __name__=='__main__':
 
             Nmax= max(labels)
 
-            assert Nmax< 60, "Need to evaluate more than 60 tresholds"
+            assert Nmax< 500, "Need to evaluate more than 500 tresholds"
 
             assert ~np.isnan(Nmax), "N range is not defined"
 
