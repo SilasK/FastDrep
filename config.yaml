@@ -5,6 +5,7 @@ mem:
 runtime:
   default: 5
   minimap: 12
+  checkm: 12
 
 sketcher: "bindash" # use bindash or mash for sketching
 sketch_k: 21

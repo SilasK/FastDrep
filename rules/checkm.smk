@@ -91,7 +91,12 @@ rule run_checkm:
     threads:
         config.get("threads",8)
     log:
-        "checkm/logs/{subset}.txt"
+        "log/checkm/{subset}.txt"
+    benchmark:
+        "log/benchmarks/checkm_{subset}.txt"
+    resources:
+        mem=config['mem']['large'],
+        time=config['runtime']['checkm']
     shell:
         """
         checkm lineage_wf \
@@ -126,6 +131,9 @@ rule merge_checkm:
     output:
         checkm="filter/Genome_quality.tsv",
         markers= "filter/checkm_markers.fasta"
+    resources:
+        mem=config['mem']['default'],
+        time=config['runtime']['default']
     run:
 
         import pandas as pd
