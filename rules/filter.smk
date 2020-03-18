@@ -237,7 +237,7 @@ rule rename_quality:
         Q= Q.rename(index=Mapping.Genome).loc[Mapping.Genome]
 
         #joun logN50 to quality for cluster_species
-        Q=Q.join(stats,rsuffix="_calculated")
+        Q=Q.join(Stats,rsuffix="_calculated")
 
         if not 'logN50' in Q.columns:
             Q['logN50'] = log10(Q.N50)
