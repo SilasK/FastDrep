@@ -12,7 +12,7 @@ sketch_k: 21
 sketch_size: 10000
 sketch_max_dist: 0.2
 
-aligner: mummer  # minimap or mummer
+aligner: minimap  # minimap or mummer
 pre_cluster_treshold: 0.08
 subset_size_alignments: 5000
 minimap_extra: "-c --secondary=no -x asm20"
