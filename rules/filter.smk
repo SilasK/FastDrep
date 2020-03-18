@@ -166,11 +166,9 @@ localrules: rename_genomes, decompress_genomes, rename_quality
 checkpoint rename_genomes:
     input:
         filenames= filtered_filenames,
-        stats=rules.calculate_stats.output[0]
     output:
         genome_folder= directory(genome_folder),
-        mapping= "tables/renamed_filenames.tsv",
-        stats="tables/genome_stats.tsv"
+        mapping= "tables/renamed_filenames.tsv"
     params:
         prefix= config.get('mag_prefix','MAG'),
         method= config.get('rename_method','prefix')
@@ -211,27 +209,39 @@ checkpoint rename_genomes:
                        row.Filename
                       )
 
+
+
+
+rule rename_quality:
+    input:
+        mapping= rules.rename_genomes.output.mapping,
+        quality="filter/Genome_quality.tsv",
+        stats = rules.calculate_stats.output[0]
+    output:
+        quality="tables/Genome_quality.tsv",
+        stats="tables/genome_stats.tsv"
+
+    run:
+        import pandas as pd
+        from numpy import log10
+
+        Mapping= pd.read_csv(input.mapping,sep='\t',index_col=0)
+
         #Rename stats
         Stats= pd.read_csv(input.stats, sep='\t',index_col=0)
         Stats= Stats.rename(index=Mapping.Genome).loc[Mapping.Genome]
         Stats.to_csv(output.stats,sep='\t')
 
-#TODO: joun logN50 to quality for cluster_species
-rule rename_quality:
-    input:
-        mapping= rules.rename_genomes.output.mapping,
-        quality="filter/Genome_quality.tsv",
-    output:
-        quality="tables/Genome_quality.tsv",
-
-
-    run:
-        import pandas as pd
-
-        Mapping= pd.read_csv(input.mapping,sep='\t',index_col=0)
-
+        # Rename quality
         Q= gd.load_quality(input.quality)
         Q= Q.rename(index=Mapping.Genome).loc[Mapping.Genome]
+
+        #joun logN50 to quality for cluster_species
+        Q=Q.join(stats,rsuffix="_calculated")
+
+        if not 'logN50' in Q.columns:
+            Q['logN50'] = log10(Q.N50)
+
         Q.to_csv(output.quality,sep='\t')
 
 
