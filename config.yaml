@@ -12,7 +12,7 @@ sketch_k: 21
 sketch_size: 10000
 sketch_max_dist: 0.2
 
-aligner: minimap  # minimap or mummer
+
 pre_cluster_treshold: 0.08
 subset_size_alignments: 5000
 minimap_extra: "-c --secondary=no -x asm20"
@@ -27,6 +27,10 @@ bbsketch:
     k: "9,12"
   nt:
     k: "31,24"
+
+species_based_on: 'bindash' # bindash, minimap, mummer
+strains_based_on: 'minimap'
+
 species_treshold: 0.95 # ]0.9-1[ or 'auto' / auto detects best treshold in range [0.92,0.97]
 genome_folder: 'all_bins'
 genome_qualities: 'Checkm_quality_allbins.tsv'

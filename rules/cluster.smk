@@ -1,13 +1,9 @@
 
 
-
-
-ANI_file= f"tables/{config['aligner']}_dists.tsv"
-
 localrules: get_representatives
 checkpoint cluster_species:
     input:
-        dists=ANI_file,
+        dists=f"tables/{config['species_based_on']}_dists.tsv",
         quality ="tables/Genome_quality.tsv",
     output:
         cluster_file="tables/mag2species.tsv",
@@ -34,7 +30,7 @@ def get_species(wildcards):
 
 checkpoint cluster_strains:
     input:
-        dists=ANI_file,
+        dists=f"tables/{config['strains_based_on']}_dists.tsv",
         quality ="tables/Genome_quality.tsv",
         mag2species= "tables/mag2species.tsv"
     output:
