@@ -68,8 +68,8 @@ if __name__=='__main__':
         raise Exception("aligner defined in the config file "
                         "should be either 'mummer' or 'minimap' "
                         )
-    Dist= 1-gd.pairewise2matrix(M,fillna=0.9)
-    Dist.clip(0,1,inplace=True)
+    Dist= 1-gd.pairewise2matrix(M,fillna=M.Identity.min())
+
 
 
 
