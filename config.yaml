@@ -28,10 +28,10 @@ bbsketch:
   nt:
     k: "31,24"
 
-species_based_on: 'bindash' # bindash, minimap, mummer
+species_based_on: 'minimap' # bindash, minimap, mummer
 strains_based_on: 'minimap'
 
-species_treshold: 0.95 # ]0.9-1[ or 'auto' / auto detects best treshold in range [0.92,0.97]
+species_treshold: 'auto' # ]0.9-1[ or 'auto' / auto detects best treshold in range [0.92,0.97]
 genome_folder: 'all_bins'
 genome_qualities: 'Checkm_quality_allbins.tsv'
 quality_score: 'completeness - 5*contamination + 0.5*logN50 + Isolate*100'
