@@ -58,11 +58,11 @@ if __name__=='__main__':
 
     assert not quality_score.isnull().any(),"I have NA quality values for thq quality score, it seems not all of the values defined in the quality_score_formula are presentfor all entries in tables/Genome_quality.tsv "
 
-    if snakemake.config['aligner']=='mummer':
+    if snakemake.config['species_based_on']=='mummer':
         M= gd.load_mummer(snakemake.input.dists)
-    elif snakemake.config['aligner']=='minimap':
+    elif snakemake.config['species_based_on']=='minimap':
         M= gd.load_minimap(snakemake.input.dists)
-    elif snakemake.config['aligner']=='bindash':
+    elif snakemake.config['species_based_on']=='bindash':
         M= gd.load_bindash(snakemake.input.dists)
     else:
         raise Exception("aligner defined in the config file "

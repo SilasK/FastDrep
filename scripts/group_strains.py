@@ -16,11 +16,11 @@ if __name__=='__main__':
     quality_score_formula = snakemake.config['quality_score']
 
 
-    if snakemake.config['aligner']=='mummer':
+    if snakemake.config['strains_based_on']=='mummer':
         M= gd.load_mummer(snakemake.input.dists)
-    elif snakemake.config['aligner']=='minimap':
+    elif snakemake.config['strains_based_on']=='minimap':
         M= gd.load_minimap(snakemake.input.dists)
-    elif snakemake.config['aligner']=='bindash':
+    elif snakemake.config['strains_based_on']=='bindash':
         M= gd.load_bindash(snakemake.input.dists)
     else:
         raise Exception("aligner defined in the config file "

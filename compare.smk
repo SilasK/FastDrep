@@ -28,7 +28,7 @@ rule all:
     input:
         #"tables/fastANI_dists.tsv",
         #expand("pyani/{method}",method=['ANIm','ANIb']),
-        f"tables/{config['aligner']}_dists.tsv",
+        f"tables/{config['strains_based_on']}_dists.tsv",
         "representatives/strains",
         "representatives/species"
 
