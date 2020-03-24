@@ -35,7 +35,7 @@ rule mash_calculate_dist:
     input:
         genomes=rules.mash_sketch_genome.output
     output:
-        "tables/mash_dists.txt"
+        "tables/mash_dists.tsv"
     params:
         d= config['sketch_max_dist'],
     threads:
@@ -45,7 +45,7 @@ rule mash_calculate_dist:
     log:
         "logs/mash/dist.log"
     benchmark:
-        "logs/benchmark/mash_dists.txt"
+        "logs/benchmark/mash_dists.tsv"
     shell:
         "mash dist -p {threads} -d {params.d} "
         "{input.genomes} {input.genomes} > {output[0]} 2> {log}"
