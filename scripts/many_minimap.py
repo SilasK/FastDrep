@@ -36,7 +36,7 @@ def many_minimap(alignment_list,genome_folder,paf_folder,genome_stats_file,exten
 
 
 
-            paf_file= os.path.join(paf_folder,genome_ref,"{genome_query}.paf")
+            paf_file= os.path.join(paf_folder,genome_ref,genome_query + ".paf")
 
             if not os.path.exists(paf_file):
 
