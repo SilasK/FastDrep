@@ -1,7 +1,8 @@
 import sys,os
-
+import pandas as pd
 
 sys.stdout = open(snakemake.log[0], 'w')
+sys.stderr = open(snakemake.log[0], 'a')
 
 from snakemake.shell import shell
 from common.alignments import parse_paf_files
@@ -9,12 +10,18 @@ from common.alignments import parse_paf_files
 
 def run_minimap(ref,query,paf,options=snakemake.params.minimap_extra,
                 threads=snakemake.threads,log=snakemake.log[0]):
+
+    os.makedirs( os.path.dirname( paf ), exist_ok=True )
+
+
     shell("minimap2 {options} -t {threads} {ref} {query}  > {paf}.tmp 2> {log} ;"
           "mv {paf}.tmp {paf} 2> {log}"
           )
 
 
-def many_minimap(alignment_list,genome_folder,paf_folder,extension='.fasta'):
+def many_minimap(alignment_list,genome_folder,paf_folder,genome_stats_file,extension='.fasta'):
+
+    stats= pd.read_csv(genome_stats_file,index_col=0,sep='\t')
 
     os.makedirs(paf_folder,exist_ok=True)
 
@@ -22,16 +29,23 @@ def many_minimap(alignment_list,genome_folder,paf_folder,extension='.fasta'):
 
     with open(alignment_list) as f:
         for line in f:
-            genome1,genome2= line.strip().split()
 
-            paf= os.path.join(paf_folder,f"{genome1}/{genome2}.paf")
+            # get larger genome as ref and smaler as query
+            genome_pair= line.strip().split()
+            genome_query,genome_ref = stats.loc[genome_pair,'Length'].sort_values().index
 
-            if not os.path.exists(paf):
-                os.makedirs(os.path.join(paf_folder,genome1),exist_ok=True)
-                ref= os.path.join(genome_folder,genome1+extension)
-                query =os.path.join(genome_folder,genome2+extension)
-                run_minimap(ref,query,paf)
-            paf_files.append(paf)
+
+
+            paf_file= os.path.join(paf_folder,genome_ref,"{genome_query}.paf")
+
+            if not os.path.exists(paf_file):
+
+                # run minimap
+                fasta_ref= os.path.join(genome_folder, genome_ref + extension)
+                fasta_query =os.path.join(genome_folder,genome_query + extension)
+                run_minimap(fasta_ref, fasta_query, paf_file)
+
+            paf_files.append(paf_file)
 
     return paf_files
 
@@ -40,6 +54,7 @@ def many_minimap(alignment_list,genome_folder,paf_folder,extension='.fasta'):
 paf_files = many_minimap(snakemake.input.alignment_list,
                        snakemake.input.genome_folder,
                        snakemake.params.paf_folder,
+                       snakemake.input.genome_stats,
                        snakemake.params.extension
                        )
 
