@@ -71,10 +71,10 @@ def get_many_genome_stats(filenames, output_filename, threads=1):
         results,
         columns=[
             "Genome",
-            "Length",
+            "Length_scaffolds",
             "N_scaffolds",
             "N50",
-            "Length_contigs",
+            "Length",
             "N_contigs",
         ],
     )
