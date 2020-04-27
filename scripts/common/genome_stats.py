@@ -2,12 +2,12 @@
 from multiprocessing import Pool
 import pandas as pd
 import os,sys
-from .io import simplify_path
+from .io import simplify_path, simply_open
 from itertools import groupby
 import numpy as np
+import gzip as gz
 
-
-def genome_stats(fasta_file,remove_index=True):
+def genome_stats(fasta_file):
     """Get genome stats from a fasta file. Outputs a tuple with:
        name,Length, n_seq,N50
     """
@@ -19,7 +19,7 @@ def genome_stats(fasta_file,remove_index=True):
 
         lengths = []
 
-        with open(fasta_file) as fasta:
+        with simply_open(fasta_file,'r') as fasta:
             ## parse each sequence by header: groupby(data, key)
             faiter = (x[1] for x in groupby(fasta, lambda line: line[0] == ">"))
 
