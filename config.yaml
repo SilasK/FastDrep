@@ -7,6 +7,8 @@ runtime:
   minimap: 12
   checkm: 12
 
+fasta_extension: ".fasta" # ['.fasta' '.fasta.gz' is sometimes suported]
+
 sketcher: "bindash" # use bindash or mash for sketching
 sketch_k: 21
 sketch_size: 10000

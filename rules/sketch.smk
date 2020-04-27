@@ -7,7 +7,7 @@ rule list_genomes:
     run:
         from glob import glob
         with open(output[0],'w') as f:
-            f.write('\n'.join(glob(f'{input[0]}/*.fasta'))+'\n' )
+            f.write('\n'.join(glob(f'{input[0]}/*{config['fasta_extension']}'))+'\n' )
 
 
 rule mash_sketch_genome:

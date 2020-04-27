@@ -13,7 +13,7 @@ rule calculate_stats:
         from common.genome_stats import get_many_genome_stats
         import pandas as pd
         d= pd.read_csv(input[0],sep='\t',index_col=0,squeeze=True,usecols=[0])
-        filenames = d.index.map(lambda s: f'genomes/{s}.fasta')
+        filenames = d.index.map(lambda s: f"genomes/{s}{config['fasta_extension']}")
         del d
         get_many_genome_stats(filenames,output[0],threads)
 
@@ -39,7 +39,7 @@ rule many_minimap:
     params:
         minimap_extra= config['minimap_extra'], #asm5/asm10/asm20: asm-to-ref mapping, for ~0.1/1/5% sequence divergence
         paf_folder="minimap/paf",
-        extension='.fasta'
+        extension=config['fasta_extension']
     script:
         "../scripts/many_minimap.py"
 
@@ -114,6 +114,11 @@ rule run_mummer:
 
 
 def get_merge_mummer_ani_input(wildcards):
+
+    if '.gz' in config['fasta_extension']:
+        raise Exception("Mummer doesn't handle gziped files, "
+                        "Select in the config file minimap instead"
+                        )
 
     subsets=get_alignment_subsets(aligner="mummer")
 
