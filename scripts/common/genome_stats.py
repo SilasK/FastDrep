@@ -44,7 +44,7 @@ def genome_stats(fasta_file):
 
             for record in faiter:
                 ## join sequence lines
-                sequence = sum(s.strip() for s in faiter.__next__())
+                sequence = ''.join(s.strip() for s in faiter.__next__())
                 scaffold_lengths.append(len(sequence))
                 contig_lengths += [
                     len(contig) for contig in sequence.replace("N", " ").split()
