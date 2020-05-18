@@ -58,9 +58,18 @@ rule combine_paf:
     output:
         "tables/minimap_dists.tsv"
     run:
-        shell("head -n1 {input[0]} > {output}")
-        for fin in input:
-            shell("tail -n+2 {fin} >> {output}")
+
+        import pandas as pd
+
+        D = pd.read_csv(input[0],sep='/t')
+        n_cols= D.shape[1]
+        D.to_csv(output[0],sep='/t')
+
+        for file in input[1:]:
+            D = pd.read_csv(file,sep='/t')
+            assert n_cols== D.shape[1], f"File {file} doen't have the same number of columns as the one before. Cannot concatenate."
+            D.to_csv(output[0],sep='/t',header=False,mode='a')
+
 
         in_dir= os.path.dirname(input[0])
         import shutil
