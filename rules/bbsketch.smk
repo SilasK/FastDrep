@@ -45,6 +45,7 @@ rule allvall:
         overwrite=True,
         command="comparesketch.sh",
         prealloc=0.75,
+        records=10000000,
         format=3,
         k=lambda wildcards: config['bbsketch'][wildcards.NTorAA]['k'],
     shadow:
