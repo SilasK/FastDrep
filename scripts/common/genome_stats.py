@@ -43,6 +43,7 @@ def genome_stats(fasta_file):
             faiter = (x[1] for x in groupby(fasta, lambda line: line[0] == ">"))
 
             for record in faiter:
+                # reccord contains header
                 ## join sequence lines
                 sequence = ''.join(s.strip() for s in faiter.__next__())
                 scaffold_lengths.append(len(sequence))
