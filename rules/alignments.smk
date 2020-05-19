@@ -46,7 +46,7 @@ rule many_minimap:
 
 def get_combine_paf_input(wildcards):
 
-    subsets=get_alignment_subsets(aligner='minimap')
+    subsets=get_alignment_subsets(aligner='minimap',**wildcards)
 
     return expand("minimap/alignments_stats/{subset}.tsv",subset=subsets)
 
@@ -61,14 +61,18 @@ rule combine_paf:
 
         import pandas as pd
 
-        D = pd.read_csv(input[0],sep='/t')
+        sep='\t'
+
+        print(input)
+
+        D = pd.read_csv(input[0],sep=sep)
         n_cols= D.shape[1]
-        D.to_csv(output[0],sep='/t')
+        D.to_csv(output[0],sep=sep)
 
         for file in input[1:]:
-            D = pd.read_csv(file,sep='/t')
+            D = pd.read_csv(file,sep=sep)
             assert n_cols== D.shape[1], f"File {file} doen't have the same number of columns as the one before. Cannot concatenate."
-            D.to_csv(output[0],sep='/t',header=False,mode='a')
+            D.to_csv(output[0],sep=sep,header=False,mode='a')
 
 
         in_dir= os.path.dirname(input[0])
