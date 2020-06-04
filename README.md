@@ -1,14 +1,11 @@
-# Snakemake workflow: Genome-Sketch
-
+# Snakemake workflow to cluster genomes (e.g. Metagenome assembled genomes) into species and Strains
 [![Snakemake](https://img.shields.io/badge/snakemake-≥5.4-brightgreen.svg)](https://snakemake.bitbucket.io)
 [![Build Status](https://travis-ci.org/snakemake-workflows/genome_sketch.svg?branch=master)](https://travis-ci.org/snakemake-workflows/genome_sketch)
 
-This is the template for a new Snakemake workflow. Replace this text with a comprehensive description covering the purpose and domain.
-Insert your code into the respective folders, i.e. `scripts`, `rules`, and `envs`. Define the entry point of the workflow in the `Snakefile` and the main configuration in the `config.yaml` file.
 
 ## Authors
 
-* Silas Kieser (@silask)
+* Silas Kieser (@silask) [Webpage](http://silask.github.io/) 
 
 ## Usage
 
