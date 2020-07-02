@@ -3,6 +3,7 @@ if not 'database_dir' in config:
     raise Exception("Expect to find a path to the 'database_dir' in the config."
                     "If you haven't yet downloaded the checkm databse run this snakefile with 'download' as target")
 
+input_genome_folder=config['genome_folder']
 DBDIR = os.path.realpath(config["database_dir"])
 CHECKMDIR = os.path.join(DBDIR, "checkm")
 CHECKM_ARCHIVE="checkm_data_2015_01_16.tar.gz"
@@ -32,7 +33,6 @@ def symlink_relative(files,input_dir,output_dir):
         os.symlink(os.path.join(input_dir_rel,f),
                    os.path.join(output_dir,f))
 
-bin_folder='filter/bins_filtered_size' #config['bin_folder']
 CHECKM_init_flag= 'checkm/init.txt'
 #
 # rule all:
@@ -45,9 +45,9 @@ localrules: get_subsets_for_checkm, merge_checkm
 
 checkpoint get_subsets_for_checkm:
     input:
-        dir=bin_folder
+        dir=input_genome_folder
     output:
-        dir=directory(temp(f"checkm/subsets"))
+        dir=directory(temp("checkm/subsets"))
     params:
         subset_size=100
     run:
@@ -91,7 +91,12 @@ rule run_checkm:
     threads:
         config.get("threads",8)
     log:
-        "checkm/logs/{subset}.txt"
+        "log/checkm/{subset}.txt"
+    benchmark:
+        "log/benchmarks/checkm_{subset}.txt"
+    resources:
+        mem=config['mem']['large'],
+        time=config['runtime']['checkm']
     shell:
         """
         checkm lineage_wf \
@@ -126,6 +131,9 @@ rule merge_checkm:
     output:
         checkm="filter/Genome_quality.tsv",
         markers= "filter/checkm_markers.fasta"
+    resources:
+        mem=config['mem']['default'],
+        time=config['runtime']['default']
     run:
 
         import pandas as pd
@@ -152,11 +160,10 @@ rule merge_checkm:
 
 
 
-
 localrules: initialize_checkm
 rule initialize_checkm:
     input:
-        ancient(rules.download.output[0])
+        ancient(f'{DBDIR}/checkm_downloaded')
     output:
         touched_output = touch(CHECKM_init_flag)
     params:

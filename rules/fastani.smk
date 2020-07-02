@@ -51,8 +51,8 @@ rule fastANI:
         " --threads {threads} "
         " --queryList {input.list1} --refList {input.list2} "
         " -k {config[fastani][k]} "
-        " --fragLen {config[fastani][fragLen]} "
-        " --minFrag {config[fastani][minFrag]} "
+        " --minFraction {config[fastani][minFraction]} "
+        " {config[fastani][extra]} "
         " -o {output} "
         " 2> {log}"
 

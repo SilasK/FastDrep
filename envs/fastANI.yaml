@@ -4,4 +4,4 @@ channels:
     - defaults
 
 dependencies:
-    - fastani
+    - fastani=1.3

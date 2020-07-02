@@ -4,4 +4,4 @@ channels:
     - defaults
 
 dependencies:
-    - bbmap=38.79
+    - bindash

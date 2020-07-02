@@ -36,25 +36,12 @@ rule calculate_stats:
     output:
         "filter/genome_stats.tsv"
     threads:
-        10
+        config['threads']
     run:
-        from common.genome_stats import get_genome_stats
-        from common import genome_pdist as gd
-        from multiprocessing import Pool
-
+        from common.genome_stats import get_many_genome_stats
         import pandas as pd
-
-
-        pool = Pool(threads)
-
         filenames= pd.read_csv(input[0],sep='\t',index_col=0,squeeze=True)
-
-        results= pool.map(get_genome_stats,filenames.FilenameOriginal)
-        Stats= pd.DataFrame(results,columns=['Length','N50'],index=filenames.index)
-
-        Stats.to_csv(output[0],sep='\t')
-
-
+        get_many_genome_stats(filenames.FilenameOriginal,output[0],threads)
 
 
 if config.get('skip_filter',False):
@@ -94,15 +81,18 @@ else:
 
 
 
-    localrules: get_predifined_quality, combine_checkm_quality
-#    ruleorder: get_predifined_quality> combine_checkm_quality
-    rule get_predifined_quality:
-        input:
-            config['genome_qualities']
-        output:
-            "filter/Genome_quality.tsv"
-        shell:
-            "cp {input} {output}"
+    localrules: get_predefined_quality, combine_checkm_quality
+
+
+    if 'genome_qualities' in config:
+        ruleorder: get_predefined_quality> merge_checkm
+        rule get_predefined_quality:
+            input:
+                config['genome_qualities']
+            output:
+                "filter/Genome_quality.tsv"
+            shell:
+                "cp {input} {output}"
 
 
 
@@ -113,6 +103,7 @@ else:
             filenames=rules.filter_genomes_by_size.output.filenames,
             filtered_dir= rules.filter_genomes_by_size.output.dir,
             quality="filter/Genome_quality.tsv",
+            stats= "filter/genome_stats.tsv"
         output:
             filenames=temp(filtered_filenames)
         params:
@@ -120,10 +111,16 @@ else:
         run:
             import pandas as pd
             from glob import glob
+            from numpy import log
 
 
             Q= gd.load_quality(input.quality)
             assert not Q.index.duplicated().any(), f"duplicated indexes in {input.quality}"
+
+            stats= pd.read_csv(input.stats,index_col=0,sep='\t')
+            stats['logN50']=log(stats.N50)
+
+            Q=Q.join(stats.loc[Q.index,stats.columns.difference(Q.columns)])
 
             Q['quality_score']= Q.eval(config['quality_score'])
 
@@ -134,11 +131,12 @@ else:
 
             missing_quality= Filenames.index.difference(intersection)
             if len(missing_quality) >0:
-                logger.error(f"missing quality information for following files: {missing_quality}")
+                raise Exception(f"missing quality information for following files: {missing_quality}")
 
-            missing_fasta= Q.index.difference(intersection)
-            if len(missing_fasta) >0:
-                logger.error(f"missing fasta file for following genomes: {missing_fasta}")
+            #missing_fasta= Q.index.difference(intersection)
+            #if len(missing_fasta) >0:
+            #    raise Exception(f"missing fasta file for following genomes: {missing_fasta}")
+
 
 
             Q= Q.loc[intersection]
@@ -161,18 +159,16 @@ def gen_names_for_range(N,prefix='',start=1):
     return [format_int.format(i) for i in range(start,N+start)]
 
 
-genome_folder='genomes'
+
 
 
 localrules: rename_genomes, decompress_genomes, rename_quality
 checkpoint rename_genomes:
     input:
         filenames= filtered_filenames,
-        stats=rules.calculate_stats.output[0]
     output:
         genome_folder= directory(genome_folder),
-        mapping= "tables/renamed_filenames.tsv",
-        stats="tables/genome_stats.tsv"
+        mapping= "tables/renamed_filenames.tsv"
     params:
         prefix= config.get('mag_prefix','MAG'),
         method= config.get('rename_method','prefix')
@@ -201,32 +197,51 @@ checkpoint rename_genomes:
 
         os.makedirs(output.genome_folder)
 
+
+        # symlink genome to original fasta file
         for _,row in Mapping.iterrows():
 
-            shutil.copy(row.FilenameOriginal,
-                        row.Filename
-                        )
-        #Rename stats
-        Stats= pd.read_csv(input.stats, sep='\t',index_col=0)
-        Stats= Stats.rename(index=Mapping.Genome).loc[Mapping.Genome]
-        Stats.to_csv(output.stats,sep='\t')
+            # shutil.copy(row.FilenameOriginal,
+            #             row.Filename
+            #             )
+            os.symlink(
+                       os.path.relpath(row.FilenameOriginal, output.genome_folder),
+                       row.Filename
+                      )
+
+
 
 
 rule rename_quality:
     input:
         mapping= rules.rename_genomes.output.mapping,
-        quality=config['genome_qualities'],
+        quality="filter/Genome_quality.tsv",
+        stats = rules.calculate_stats.output[0]
     output:
         quality="tables/Genome_quality.tsv",
-
+        stats="tables/genome_stats.tsv"
 
     run:
         import pandas as pd
+        from numpy import log10
 
         Mapping= pd.read_csv(input.mapping,sep='\t',index_col=0)
 
+        #Rename stats
+        Stats= pd.read_csv(input.stats, sep='\t',index_col=0)
+        Stats= Stats.rename(index=Mapping.Genome).loc[Mapping.Genome]
+        Stats.to_csv(output.stats,sep='\t')
+
+        # Rename quality
         Q= gd.load_quality(input.quality)
         Q= Q.rename(index=Mapping.Genome).loc[Mapping.Genome]
+
+        #joun logN50 to quality for cluster_species
+        Q=Q.join(Stats,rsuffix="_calculated")
+
+        if not 'logN50' in Q.columns:
+            Q['logN50'] = log10(Q.N50)
+
         Q.to_csv(output.quality,sep='\t')
 
 
@@ -234,11 +249,11 @@ rule rename_quality:
 
 
 
-rule decompress_genomes:
-    input:
-        "genomes.tar.gz"
-    output:
-        directory("genomes")
-    shell:
-        "tar -xzf {input}"
-ruleorder: decompress_genomes>rename_genomes
+# rule decompress_genomes:
+#     input:
+#         "genomes.tar.gz"
+#     output:
+#         directory("genomes")
+#     shell:
+#         "tar -xzf {input}"
+# ruleorder: decompress_genomes>rename_genomes
