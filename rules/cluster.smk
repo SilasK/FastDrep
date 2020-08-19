@@ -90,6 +90,24 @@ checkpoint get_representatives:
 
 
 
+genome2species=None
+
+
+def get_genome2species_mapping(wildcards):
+
+    if genome2species is not None:
+
+        return genome2species
+
+    else:
+
+        cluster_file= checkpoints.cluster_species.get(**wildcards).output.cluster_file
+
+        import pandas as pd
+
+        Sp = pd.read_table(cluster_file,index_col=0)
+
+
 checkpoint get_ref_bbsplit:
     input:
         dir= genome_folder,
