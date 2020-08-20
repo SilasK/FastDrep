@@ -7,4 +7,3 @@ dependencies:
     - mummer4
     - python=3.6
     - pandas=0.24
-    - snakemake=5.5.4

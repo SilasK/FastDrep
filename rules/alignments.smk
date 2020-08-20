@@ -123,36 +123,31 @@ def estimate_time_mummer(N,threads):
 
 
 
-rule run_mummer:
+rule many_mummer:
     input:
-        comparison_list="alignment/subsets/{subset}.txt",
-        genome_folder= genome_folder,
-        genome_stats="tables/genome_stats.tsv",
+        genome_folder=genome_folder,
+        alignment_list="alignment/subsets/{subset}.txt",
+        genome_stats= "tables/genome_stats.tsv"
     output:
-        temp("alignment/ANI/{subset}.tsv")
+        output_table="alignment/mummer/ani_table_{subset}.tsv",
+    log:
+        "logs/mummer/{subset}.txt"
+    benchmark:
+        "logs/benchmarks/mummer/{subset}.txt"
     threads:
-        config['threads']
-    conda:
-        "../envs/mummer.yaml"
+        1 #config['threads']
     resources:
         time= lambda wc, input, threads: estimate_time_mummer(config['subset_size_alignments'],threads),
         mem=config['mem'].get('mummer',20)
-    log:
-        "logs/mummer/workflows/{subset}.txt"
-    benchmark:
-        "logs/benchmarks/mummer/{subset}.txt"
-    benchmark:
-        "logs/benchmarks/mummer/{subset}.txt"
+    conda:
+        "../envs/mummer.yaml"
     params:
-        path= os.path.dirname(workflow.snakefile)
-    shell:
-        "snakemake -s {params.path}/rules/mummer.smk "
-        "--config comparison_list='{input.comparison_list}' "
-        " genome_folder='{input.genome_folder}' "
-        " subset={wildcards.subset} "
-        " genome_stats={input.genome_stats} "
-        " --rerun-incomplete "
-        "-j {threads} --nolock 2> {log}"
+        out_folder="alignment/delta",
+        mummer_options= "--mincluster 65 --maxgap 90 ",
+        tmpfolder= "/tmp",
+    script:
+        "../scripts/many_mummer.py"
+
 
 
 
@@ -166,7 +161,7 @@ def get_merge_mummer_ani_input(wildcards):
     subsets= glob_wildcards(os.path.join(subset_dir,'{subset}.txt')).subset
 
 
-    return expand("alignment/ANI/{subset}.tsv",subset=subsets)
+    return expand(rules.many_mummer.output,subset=subsets)
 
 localrules: merge_mummer_ani
 rule merge_mummer_ani:
