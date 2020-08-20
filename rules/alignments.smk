@@ -20,7 +20,7 @@ rule calculate_stats:
 
 checkpoint get_alignment_subsets:
     input:
-        rules.precluster.output.edgelist
+        edgelist=rules.precluster.output.edgelist
     output:
         dir=temp(directory('alignment/subsets'))
     params:
@@ -28,24 +28,28 @@ checkpoint get_alignment_subsets:
 
     run:
 
+        # laod edgelist
+        import networkx as nx
+        G= nx.read_edgelist(input.edgelist,data=False)
+
+
+
+
         os.makedirs(output.dir)
 
-
+        # save pairs ordered alphabetically in multiple files
         fout=None
-        with open(input[0],'r') as edgelist:
-            for i,line in enumerate(edgelist):
-                if (i % int(params.N)) ==0:
-                    n_file= int(i // params.N )+1
-                    if fout is not None: fout.close()
-                    fout= open(f"{output.dir}/subset_{n_file}.txt",'w')
+        for i,pair in enumerate(G.edges()):
+            if (i % int(params.N)) ==0:
+                n_file= int(i // params.N )+1
+                if fout is not None: fout.close()
+                fout= open(f"{output.dir}/subset_{n_file}.txt",'w')
 
-                pair=sorted(line.strip().split())
-
-                fout.write("\t".join(pair)+'\n')
+            fout.write("\t".join(sorted(pair))+'\n')
 
 
-            fout.close()
-        assert i>=1,"No connection correspond the criteria for preclustering"
+        fout.close()
+        
 
 rule many_minimap:
     input:
