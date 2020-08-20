@@ -24,7 +24,8 @@ Clustering =gd.best_genome_from_table(pd.Series(Clustering),Q.quality_score)
 
 # don't foget  Genomes qith no connection
 lonly_genomes= Q.index.difference(Clustering.index)
-Clustering.loc[lonly_genomes]=lonly_genomes
+Clustering= Clustering.append(pd.Series(lonly_genomes,lonly_genomes))
+
 
 #save clustering
 Clustering.name='Precluster_representative'
