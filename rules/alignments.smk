@@ -18,6 +18,8 @@ rule calculate_stats:
         del d
         get_many_genome_stats(filenames,output[0],threads)
 
+
+localrules: get_alignment_subsets
 checkpoint get_alignment_subsets:
     input:
         edgelist=rules.precluster.output.edgelist
