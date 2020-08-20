@@ -49,7 +49,7 @@ checkpoint get_alignment_subsets:
 
 
         fout.close()
-        
+
 
 rule many_minimap:
     input:
@@ -148,7 +148,7 @@ rule many_mummer:
     params:
         out_folder="alignment/delta",
         mummer_options= "--mincluster 65 --maxgap 90 ",
-        tmpfolder= "/tmp",
+        tmpfolder= config['tmpfolder'],
     script:
         "../scripts/many_mummer.py"
 
