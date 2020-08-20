@@ -17,7 +17,7 @@ rule get_orig_filenames:
 
         filenames.index= filenames.FilenameOriginal.apply(io.simplify_path)
         filenames.index.name='Bin'
-        filenames['Filename']= filenames.index.map(lambda g: os.path.join(output.dir,g+'.fasta'))
+        filenames['Filename']= filenames.index.map(lambda g: os.path.join(output.dir,g+config['fasta_extension']))
         filenames.to_csv(output.filenames,sep='\t')
 
         os.makedirs(output.dir)
@@ -76,7 +76,7 @@ else:
                 raise Exception("Less than 2 genomes pass fragementation filter")
 
             os.makedirs(output.dir)
-            symlink_relative(filtered.index+'.fasta',input.dir,output.dir)
+            symlink_relative(filtered.index+config['fasta_extension'],input.dir,output.dir)
 
 
 
@@ -190,7 +190,7 @@ checkpoint rename_genomes:
 
 
         # new filenames
-        Mapping['Filename']= Mapping.Genome.apply(lambda g: os.path.join(output.genome_folder,g+'.fasta'))
+        Mapping['Filename']= Mapping.Genome.apply(lambda g: os.path.join(output.genome_folder,g+config['fasta_extension']))
         Mapping.to_csv(output.mapping,sep='\t')
         #newFilenames= Mapping.set_index('Genome').Filename
 

@@ -6,8 +6,15 @@ rule list_genomes:
         temp("sketches/genome_list_{sketcher}.txt")
     run:
         from glob import glob
+
+        fasta_files=glob(f"{input[0]}/*{config['fasta_extension']}")
+        if len(fasta_files)<=2:
+            Exception(f"You have less than 2 fasta file with extension ({config['fasta_extension']})"
+                      f" in the folder {genome_folder}"
+                      )
+
         with open(output[0],'w') as f:
-            f.write('\n'.join(glob(f"{input[0]}/*{config['fasta_extension']}"))+'\n' )
+            f.write('\n'.join(fasta_files)+'\n' )
 
 
 rule mash_sketch_genome:
@@ -102,39 +109,66 @@ rule bindash_dist:
 
 
 
-checkpoint filter_sketch:
+rule precluster:
     input:
-        f"tables/{config['sketcher']}_dists.tsv"
+        dists=f"tables/{config['sketcher']}_dists.tsv",
+        quality="tables/Genome_quality.tsv",
     output:
-        temp(directory('{aligner}/subsets'))
+        preclustering="tables/preclustering.tsv",
+        edgelist= temp('alignment/all_pairs_for_alignment.tsv')
     params:
         treshold=config['pre_cluster_treshold'],
-        N=config['subset_size_alignments']
-    benchmark:
-        "logs/benchmark/filter_sketch_{aligner}.txt"
+        min_identity=config['pre_cluster_min_identity'],
+        N=config['subset_size_alignments'],
     resources:
         mem=config['mem']['large']
+
     run:
 
-        F= gd.load_mash(input[0])
-        G= gd.to_graph(F.query(f"Distance<={params.treshold}"))
+        import pandas as pd
+
+        Q= gd.load_quality(input.quality)
+        Q['quality_score']= Q.eval(config['quality_score'])
+
+        Msh= gd.load_mash(input.dists)
+        Msh_high= Msh.query(f"Identity>={params.treshold}")
+        G= gd.to_graph(Msh_high)
+
+        #map genomes to clusters by single linkage
+        Clustering= {}
+        for i,cc in enumerate(gd.nx.connected_components(G)):
+            for g in cc:
+                  Clustering[g]=i
+        Clustering =gd.best_genome_from_table(pd.Series(Clustering),Q.quality_score)
+
+        # don't foget  Genomes qith no connection
+        lonly_genomes= Q.index.difference(Clustering.index)
+        Clustering.loc[lonly_genomes]=lonly_genomes
+
+        #save clustering
+        Clustering.name='Precluster_representative'
+        Clustering.index.name='Genome'
+        Clustering.to_csv(output.preclustering,sep='\t')
+
+        #Subset_pairwise distances
+        Cluster_representatives= Clustering.unique()
+
+        Msh_sub= Msh.loc[ (
+        Msh.index.levels[0].intersection(Cluster_representatives),
+        Msh.index.levels[1].intersection(Cluster_representatives)
+         ),:].query(f"Identity>={params.min_identity}")
+
+        print(f"From {Clustering.shape[0]} genomes {Cluster_representatives.shape[0]} "
+              f"({Cluster_representatives.shape[0]/Clustering.shape[0]*100:.2f}%) are representatives.\n"
+              f"This decreases the number of interaction to {Msh_sub.shape[0]:d} ({Msh_sub.shape[0]/Msh.shape[0]:.2g})"
+             )
+
+
+
+        # save list of all comparison to perform alignment on them
+        G= gd.to_graph(Msh_sub)
         if hasattr(G,'selfloop_edges'):
             G.remove_edges_from(G.selfloop_edges())
 
-        os.makedirs(output[0])
 
-        fout=None
-        for i,e in enumerate(G.edges()):
-            if (i % int(params.N)) ==0:
-                n= int(i // params.N )+1
-                if fout is not None: fout.close()
-                fout= open(f"{output[0]}/subset_{n}.txt",'w')
-
-            fout.write("\t".join(sorted(e))+'\n')
-
-def get_alignment_subsets(**wildcards):
-    subset_dir= checkpoints.filter_sketch.get(**wildcards).output[0]
-
-    subsets= glob_wildcards(os.path.join(subset_dir,'{subset}.txt')).subset
-
-    return subsets
+        gd.nx.write_edgelist(G,output.edgelist,delimiter='\t',data=False,comments=None)

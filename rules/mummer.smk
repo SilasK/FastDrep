@@ -14,7 +14,7 @@ assert (path.isdir(genome_folder) & path.exists(genome_folder))
 
 rule all:
     input:
-        f"mummer/ANI/{subset}.tsv"
+        f"alignment/ANI/{subset}.tsv"
 
 
 rule run_mummer:
@@ -22,13 +22,13 @@ rule run_mummer:
         ref=path.join(genome_folder,"{ref}.fasta"),
         query=path.join(genome_folder,"{query}.fasta")
     output:
-        temp("mummer/delta/{ref}/{query}.delta")
+        temp("alignment/delta/{ref}/{query}.delta")
     params:
-        out_prefix= "mummer/delta/{ref}/{query}",
+        out_prefix= "alignment/delta/{ref}/{query}",
         options= "--mincluster 65 --maxgap 90 ",
         method= "mum"
     log:
-        "logs/mummer/mummer/{ref}/{query}.txt"
+        "logs/alignment/alignment/{ref}/{query}.txt"
     threads:
         1
     shell:
@@ -38,7 +38,7 @@ rule delta_filter:
     input:
         rules.run_mummer.output[0]
     output:
-        "mummer/delta/{ref}/{query}.delta.filtered"
+        "alignment/delta/{ref}/{query}.delta.filtered"
     params:
         options="-r -q"
     shell:
@@ -64,7 +64,7 @@ rule parse_delta:
     input:
         rules.delta_filter.output[0]
     output:
-        temp("mummer/delta/{ref}/{query}.txt")
+        temp("alignment/delta/{ref}/{query}.txt")
     run:
 
         aln_length, sim_errors = parse_delta(input[0])
@@ -75,9 +75,9 @@ rule parse_delta:
 
 rule combine:
     input:
-        ["mummer/delta/{}/{}.txt".format(*pair) for pair in comparisons]
+        ["alignment/delta/{}/{}.txt".format(*pair) for pair in comparisons]
     output:
-        temp(f"mummer/ANI/{subset}.txt")
+        temp(f"alignment/ANI/{subset}.txt")
     run:
         with open(output[0], "w") as fout:
             for f in input:
@@ -90,7 +90,7 @@ rule calculate_ANI:
         alignments=rules.combine.output[0],
         genome_stats= genome_stats
     output:
-        f"mummer/ANI/{subset}.tsv"
+        f"alignment/ANI/{subset}.tsv"
     run:
         import pandas as pd
 

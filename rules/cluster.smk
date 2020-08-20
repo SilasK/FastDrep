@@ -84,8 +84,8 @@ checkpoint get_representatives:
         input_dir= os.path.relpath(input.dir,start=output_dir)
 
         for genome in mapping.unique():
-            os.symlink(os.path.join(input_dir,genome+'.fasta'),
-                       os.path.join(output_dir,genome+'.fasta')
+            os.symlink(os.path.join(input_dir,genome+config['fasta_extension']),
+                       os.path.join(output_dir,genome+config['fasta_extension'])
                    )
 
 
@@ -123,8 +123,8 @@ checkpoint get_ref_bbsplit:
         os.makedirs(output.dir)
 
         for species_name,sp in df.groupby('Species'):
-            with open(os.path.join(output.dir,species_name+'.fasta'),'w') as fasta_out:
+            with open(os.path.join(output.dir,species_name+config['fasta_extension']),'w') as fasta_out:
                 for genome in sp.Representative_Strains.unique():
 
-                    with open(os.path.join(input.dir,genome+'.fasta')) as fasta_in:
+                    with open(os.path.join(input.dir,genome+config['fasta_extension'])) as fasta_in:
                         fasta_out.write(fasta_in.read())

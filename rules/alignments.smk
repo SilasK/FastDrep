@@ -1,3 +1,4 @@
+#TODO: expand precluster for species cluaterin
 
 # duplicated rule in case not imported
 rule calculate_stats:
@@ -17,17 +18,44 @@ rule calculate_stats:
         del d
         get_many_genome_stats(filenames,output[0],threads)
 
+checkpoint get_alignment_subsets:
+    input:
+        rules.precluster.output.edgelist
+    output:
+        dir=temp(directory('alignment/subsets'))
+    params:
+        N=config['subset_size_alignments'],
 
+    run:
+
+        os.makedirs(output.dir)
+
+
+        fout=None
+        with open(input[0],'r') as edgelist:
+            for i,line in enumerate(edgelist):
+                if (i % int(params.N)) ==0:
+                    n_file= int(i // params.N )+1
+                    if fout is not None: fout.close()
+                    fout= open(f"{output.dir}/subset_{n_file}.txt",'w')
+
+                pair=sorted(line.strip().split())
+
+                fout.write("\t".join(pair)+'\n')
+
+
+            fout.close()
+        assert i>=1,"No connection correspond the criteria for preclustering"
 
 rule many_minimap:
     input:
         genome_folder=genome_folder,
-        alignment_list="minimap/subsets/{subset}.txt",
+        alignment_list="alignment/subsets/{subset}.txt",
         genome_stats= "tables/genome_stats.tsv"
     output:
-        alignments_stats="minimap/alignments_stats/{subset}.tsv",
+        alignments_stats="alignment/alignments_stats/{subset}.tsv",
     log:
-        "logs/minimap2/{subset}.txt"
+        "logs/minimap/{subset}.txt"
     benchmark:
         "logs/benchmarks/minimap/{subset}.txt"
     threads:
@@ -38,7 +66,7 @@ rule many_minimap:
         "../envs/minimap2.yaml"
     params:
         minimap_extra= config['minimap_extra'], #asm5/asm10/asm20: asm-to-ref mapping, for ~0.1/1/5% sequence divergence
-        paf_folder="minimap/paf",
+        paf_folder="alignment/paf",
         extension=config['fasta_extension']
     script:
         "../scripts/many_minimap.py"
@@ -46,9 +74,13 @@ rule many_minimap:
 
 def get_combine_paf_input(wildcards):
 
-    subsets=get_alignment_subsets(aligner='minimap',**wildcards)
 
-    return expand("minimap/alignments_stats/{subset}.tsv",subset=subsets)
+    subset_dir= checkpoints.get_alignment_subsets.get().output[0]
+    logger.info(f"subset dir : {subset_dir}")
+
+    subsets= glob_wildcards(os.path.join(subset_dir,'{subset}.txt')).subset
+
+    return expand("alignment/alignments_stats/{subset}.tsv",subset=subsets)
 
 
 localrules: combine_paf
@@ -62,8 +94,6 @@ rule combine_paf:
         import pandas as pd
 
         sep='\t'
-
-        print(input)
 
         D = pd.read_csv(input[0],sep=sep)
         n_cols= D.shape[1]
@@ -95,11 +125,11 @@ def estimate_time_mummer(N,threads):
 
 rule run_mummer:
     input:
-        comparison_list="mummer/subsets/{subset}.txt",
+        comparison_list="alignment/subsets/{subset}.txt",
         genome_folder= genome_folder,
         genome_stats="tables/genome_stats.tsv",
     output:
-        temp("mummer/ANI/{subset}.tsv")
+        temp("alignment/ANI/{subset}.tsv")
     threads:
         config['threads']
     conda:
@@ -132,10 +162,11 @@ def get_merge_mummer_ani_input(wildcards):
         raise Exception("Mummer doesn't handle gziped files, "
                         "Select in the config file minimap instead"
                         )
+    subset_dir= checkpoints.get_alignment_subsets.get().output[0]
+    subsets= glob_wildcards(os.path.join(subset_dir,'{subset}.txt')).subset
 
-    subsets=get_alignment_subsets(aligner="mummer")
 
-    return expand("mummer/ANI/{subset}.tsv",subset=subsets)
+    return expand("alignment/ANI/{subset}.tsv",subset=subsets)
 
 localrules: merge_mummer_ani
 rule merge_mummer_ani:
