@@ -40,19 +40,18 @@ Msh.index.levels[1].intersection(Cluster_representatives)
  ),:].query(f"Identity>={snakemake.params.min_identity}")
 
 
-with open(snakemake.log.stats,'w') as logfile:
-    print(f"From {Clustering.shape[0]} genomes {Cluster_representatives.shape[0]} "
-      f"({Cluster_representatives.shape[0]/Clustering.shape[0]*100:.2f}%) are representatives.\n"
-      f"This decreases the number of interaction to {Msh_sub.shape[0]:d} ({Msh_sub.shape[0]/Msh.shape[0]:.2g})",
-      logfile
-     )
-
-
-
 # save list of all comparison to perform alignment on them
 G= gd.to_graph(Msh_sub)
 G.remove_edges_from(nx.selfloop_edges(G))
 
-assert G.number_of_edges()>=1,"No connection correspond the criteria for preclustering"
+N_comparisons= G.number_of_edges()
+
+assert N_comparisons>=1,"No connection correspond the criteria for preclustering"
 
 nx.write_edgelist(G,snakemake.output.edgelist,delimiter='\t',data=False,comments=None)
+
+with open(snakemake.log.stats,'w') as logfile:
+    logfile.write(f"From {Clustering.shape[0]} genomes {Cluster_representatives.shape[0]} "
+      f"({Cluster_representatives.shape[0]/Clustering.shape[0]*100:.2f}%) are representatives.\n"
+      f"This decreases the number of interaction to {N_comparisons:d} ({N_comparisons/Msh.shape[0]:.2g})\n"
+     )
