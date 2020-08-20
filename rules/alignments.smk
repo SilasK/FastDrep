@@ -88,7 +88,7 @@ rule combine_paf:
     input:
         get_combine_paf_input
     output:
-        "tables/minimap_dists.tsv"
+        "tables/minimap_precluster_dists.tsv"
     run:
 
         import pandas as pd
@@ -168,7 +168,7 @@ rule merge_mummer_ani:
     input:
         get_merge_mummer_ani_input
     output:
-        "tables/mummer_dists.tsv"
+        "tables/mummer_precluster_dists.tsv"
     run:
         import pandas as pd
         import shutil
