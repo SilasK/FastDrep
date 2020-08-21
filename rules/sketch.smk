@@ -121,8 +121,10 @@ rule precluster:
         min_identity=config['pre_cluster_min_identity'],
         N=config['subset_size_alignments'],
     resources:
-        mem=config['mem']['large']
-
+        mem=config['mem']['large'],
+        time=config['runtime']['precluster']
+    benchmark:
+        "logs/benchmark/precluster.txt"
     log:
         'logs/precluster/log.txt',
         stats='logs/precluster/stats.txt'

@@ -6,6 +6,7 @@ runtime:
   default: 5
   minimap: 12
   checkm: 12
+  precluster: 12
 
 tmpfolder: "/tmp"
 
