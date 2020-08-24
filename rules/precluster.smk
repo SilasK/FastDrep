@@ -199,7 +199,7 @@ rule precluster:
         "../scripts/precluster.py"
 
 
-localrules: get_alignment_subsets
+
 checkpoint get_alignment_subsets:
     input:
         f"precluster/{config['sketcher']}_dists_precluster_representatives.tsv",
@@ -209,7 +209,11 @@ checkpoint get_alignment_subsets:
     params:
         N=config['subset_size_alignments'],
         min_identity=config['pre_cluster_min_identity'],
-
+    resources:
+        mem=config['mem']['large'],
+        time=config['runtime']['precluster']
+    benchmark:
+        "logs/benchmark/precluster/get_alignment_subsets.txt"
     run:
 
         import networkx as nx
