@@ -46,7 +46,7 @@ rule allvall:
         command="comparesketch.sh",
         prealloc=0.75,
         records=10000000,
-        minani= 1- config['sketch_max_dist'],
+        minani= 1- config.get('sketch_max_dist',0.2),
         format=3,
         k=lambda wildcards: config['bbsketch'][wildcards.NTorAA]['k'],
     shadow:

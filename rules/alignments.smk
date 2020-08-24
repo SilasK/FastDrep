@@ -19,38 +19,6 @@ rule calculate_stats:
         get_many_genome_stats(filenames,output[0],threads)
 
 
-localrules: get_alignment_subsets
-checkpoint get_alignment_subsets:
-    input:
-        edgelist=rules.precluster.output.edgelist
-    output:
-        dir=temp(directory('alignment/subsets'))
-    params:
-        N=config['subset_size_alignments'],
-
-    run:
-
-        # laod edgelist
-        import networkx as nx
-        G= nx.read_edgelist(input.edgelist,data=False)
-
-
-
-
-        os.makedirs(output.dir)
-
-        # save pairs ordered alphabetically in multiple files
-        fout=None
-        for i,pair in enumerate(G.edges()):
-            if (i % int(params.N)) ==0:
-                n_file= int(i // params.N )+1
-                if fout is not None: fout.close()
-                fout= open(f"{output.dir}/subset_{n_file}.txt",'w')
-
-            fout.write("\t".join(sorted(pair))+'\n')
-
-
-        fout.close()
 
 
 rule many_minimap:
@@ -94,7 +62,7 @@ rule combine_paf:
     input:
         get_combine_paf_input
     output:
-        "tables/minimap_precluster_dists.tsv"
+        "precluster/minimap_dists.tsv"
     run:
 
         import pandas as pd
@@ -174,7 +142,7 @@ rule merge_mummer_ani:
     input:
         get_merge_mummer_ani_input
     output:
-        "tables/mummer_precluster_dists.tsv"
+        "precluster/mummer_dists.tsv"
     run:
         import pandas as pd
         import shutil

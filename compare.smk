@@ -24,7 +24,7 @@ include: "rules/fastani.smk"
 include: "rules/pyani.smk"
 include: "rules/bbsketch.smk"
 
-include: "rules/sketch.smk"
+include: "rules/precluster.smk"
 include: "rules/alignments.smk"
 include: "rules/cluster.smk"
 
