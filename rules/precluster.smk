@@ -107,9 +107,9 @@ rule bindash_sketch:
     input:
         "sketches/{genomeset}.list"
     output:
-        "sketches/{genomeset}_K{k}.bdsh",
-        "sketches/{genomeset}_K{k}.bdsh.dat",
-        "sketches/{genomeset}_K{k}.bdsh.txt"
+        temp("sketches/{genomeset}_K{k}.bdsh"),
+        temp("sketches/{genomeset}_K{k}.bdsh.dat"),
+        temp("sketches/{genomeset}_K{k}.bdsh.txt")
     params:
         sketchsize64= int(config['sketch_size'])//64,
         extra=config.get('bindash_extra',"")
