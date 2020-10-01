@@ -48,6 +48,10 @@ rule all_species:
         "tables/refseq_mapping_species.tsv",
         "representatives/species",
 
+rule multik:
+    input:
+        expand("tables/bindash_dists_K{k}.tsv", k=[13,15,17,19,21,25,29,31,35])
+
 
 for r in workflow.rules:
     if not "mem" in r.resources:

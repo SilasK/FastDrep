@@ -107,11 +107,10 @@ rule bindash_sketch:
     input:
         "sketches/{genomeset}.list"
     output:
-        "sketches/{genomeset}.bdsh",
-        "sketches/{genomeset}.bdsh.dat",
-        "sketches/{genomeset}.bdsh.txt"
+        "sketches/{genomeset}_K{k}.bdsh",
+        "sketches/{genomeset}_K{k}.bdsh.dat",
+        "sketches/{genomeset}_K{k}.bdsh.txt"
     params:
-        k= config['sketch_k'],
         sketchsize64= int(config['sketch_size'])//64,
         extra=config.get('bindash_extra',"")
     threads:
@@ -119,21 +118,21 @@ rule bindash_sketch:
     conda:
         "../envs/bindash.yaml"
     log:
-        "logs/sketch/bindash_sketch_{genomeset}.log"
+        "logs/sketch/bindash_sketch_{genomeset}_K{k}.log"
     benchmark:
-        "logs/benchmark/sketch/bindash_sketch_{genomeset}.txt"
+        "logs/benchmark/sketch/bindash_sketch_{genomeset}_K{k}.txt"
     shell:
         "bindash sketch "
         "--outfname={output[0]} "
         "--nthreads={threads} "
         "--sketchsize64={params.sketchsize64} "
-        "--kmerlen={params.k} "
+        "--kmerlen={wildcards.k} "
         "{params.extra} "
         "--listfname={input[0]} 2> {log}"
 
 rule bindash_dist_precluster:
     input:
-        "sketches/{genomeset}.bdsh"
+        "sketches/{genomeset}_K{config[sketch_k]}.bdsh"
     output:
         temp("precluster/bindash_dists_{genomeset}.tsv")
     params:
@@ -155,9 +154,9 @@ rule bindash_dist_precluster:
 
 rule bindash_dist:
     input:
-        "sketches/all_genomes.bdsh"
+        "sketches/all_genomes_K{k}.bdsh"
     output:
-        "tables/bindash_dists.tsv"
+        "tables/bindash_dists_K{k}.tsv"
     params:
         d= config.get('sketch_max_dist',0.2)
     threads:
@@ -165,9 +164,9 @@ rule bindash_dist:
     conda:
         "../envs/bindash.yaml"
     log:
-        "logs/bindash/dist.log"
+        "logs/bindash/dist_K{k}.log"
     benchmark:
-        "logs/benchmark/bindash_dist.txt"
+        "logs/benchmark/bindash_dist_K{k}.txt"
     shell:
         "bindash dist "
         "--nthreads={threads} "
