@@ -125,6 +125,54 @@ rule many_mummer:
 
 
 
+rule run_mummer:
+    input:
+        comparison_list="mummer/subsets/{subset}.txt",
+        genome_folder= genome_folder,
+        genome_stats="tables/genome_stats.tsv",
+    output:
+        temp("mummer/ANI/{subset}.tsv")
+    threads:
+        config['threads']
+    conda:
+        "../envs/mummer.yaml"
+    resources:
+        time= lambda wc, input, threads: estimate_time_mummer(config['subset_size_alignments'],threads),
+        mem=config['mem'].get('mummer',20)
+    log:
+        "logs/mummer/workflows/{subset}.txt"
+    benchmark:
+        "logs/benchmarks/mummer/{subset}.txt"
+    benchmark:
+        "logs/benchmarks/mummer/{subset}.txt"
+
+
+    run:
+        from snakemake import snakemake
+        import sys, os
+
+        sys.stdout = open(snakemake.log[0], "w")
+        sys.stderr = open(snakemake.log[0], "a")
+
+        snakemake( os.path.join(snakemake_folder,"rules","mummer.smk"),
+                  config={comparison_list=input.comparison_list,
+                  genome_folder=input.genome_folder,
+                  subset=wildcards.subset,
+                  genome_stats=input.genome_stats,
+                  tmpfolder=config['tmpfolder']
+                  },
+                  cores=threads,
+                  lock=False,
+                  force_incomplete=True
+
+                  )
+
+
+
+
+
+
+
 def get_merge_mummer_ani_input(wildcards):
 
     if '.gz' in config['fasta_extension']:
