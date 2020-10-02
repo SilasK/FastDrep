@@ -152,7 +152,10 @@ rule bindash_dist_precluster:
 
 rule bindash_dist:
     input:
-        expand("sketches/{{genomeset}}_K{{k}}.{ext}",ext=['bdsh','bdsh.dat','bdsh.txt'])
+        expand("sketches/{genomeset}_K{{k}}.{ext}",
+               genomeset=all_genomes,
+                ext=['bdsh','bdsh.dat','bdsh.txt']
+                )
     output:
         "tables/bindash_dists_K{k}.tsv"
     params:
