@@ -130,7 +130,7 @@ rule bindash_sketch:
 
 rule bindash_dist_precluster:
     input:
-        exmapnd("sketches/{{genomeset}}_K{k}.{ext}",k=config[sketch_k],ext=['bdsh','bdsh.dat','bdsh.txt'])
+        expand("sketches/{{genomeset}}_K{k}.{ext}",k=config[sketch_k],ext=['bdsh','bdsh.dat','bdsh.txt'])
     output:
         temp("precluster/bindash_dists_{genomeset}.tsv")
     params:
@@ -152,7 +152,7 @@ rule bindash_dist_precluster:
 
 rule bindash_dist:
     input:
-        exmapnd("sketches/{{genomeset}}_K{{k}}.{ext}",ext=['bdsh','bdsh.dat','bdsh.txt'])
+        expand("sketches/{{genomeset}}_K{{k}}.{ext}",ext=['bdsh','bdsh.dat','bdsh.txt'])
     output:
         "tables/bindash_dists_K{k}.tsv"
     params:
