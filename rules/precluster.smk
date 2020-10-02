@@ -153,7 +153,7 @@ rule bindash_dist_precluster:
 rule bindash_dist:
     input:
         expand("sketches/{genomeset}_K{{k}}.{ext}",
-               genomeset=all_genomes,
+               genomeset='all_genomes',
                 ext=['bdsh','bdsh.dat','bdsh.txt']
                 )
     output:
