@@ -139,33 +139,17 @@ rule run_mummer:
     resources:
         time= lambda wc, input, threads: estimate_time_mummer(config['subset_size_alignments'],threads),
         mem=config['mem'].get('mummer',20)
+    params:
+        snakefile= os.path.join(snakemake_folder,"rules","mummer.smk")
     log:
         "logs/mummer/workflows/{subset}.txt"
     benchmark:
         "logs/benchmarks/mummer/{subset}.txt"
     benchmark:
         "logs/benchmarks/mummer/{subset}.txt"
+    script:
+        "../scripts/mummer_snakemake.py"
 
-
-    run:
-        from snakemake import snakemake
-        import sys, os
-
-        sys.stdout = open(snakemake.log[0], "w")
-        sys.stderr = open(snakemake.log[0], "a")
-
-        snakemake( os.path.join(snakemake_folder,"rules","mummer.smk"),
-                  config={comparison_list=input.comparison_list,
-                  genome_folder=input.genome_folder,
-                  subset=wildcards.subset,
-                  genome_stats=input.genome_stats,
-                  tmpfolder=config['tmpfolder']
-                  },
-                  cores=threads,
-                  lock=False,
-                  force_incomplete=True
-
-                  )
 
 
 
