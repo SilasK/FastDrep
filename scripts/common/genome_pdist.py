@@ -132,8 +132,8 @@ def load_bindash(dist_file, simplify_names=True):
         dist_file, ["Distance", "Pvalue", "Fraction"], simplify_names=simplify_names
     )
 
-    F["Nmapped"] = F.Fraction.map(lambda s: int(s.split("/")[0]))
-    F["Ntotal"] = F.Fraction.map(lambda s: int(s.split("/")[1]))
+    F["Nmapped"] = F.Fraction.map(lambda s: int(s.split("/")[0])).astype(int)
+    F["Ntotal"] = F.Fraction.map(lambda s: int(s.split("/")[1])).astype(int)
     F["Fraction"] = F.Nmapped / F.Ntotal
     F["Identity"] = 1 - F.Distance
 
