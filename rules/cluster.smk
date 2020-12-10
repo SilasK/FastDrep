@@ -3,7 +3,7 @@
 localrules: get_representatives
 checkpoint cluster_species:
     input:
-        dists=f"tables/{config['species_based_on']}_dists.tsv",
+        dists=f"tables/{config['species_based_on']}_dists.parquet",
         quality ="tables/Genome_quality.tsv",
     output:
         cluster_file="tables/mag2species.tsv",

@@ -100,6 +100,36 @@ rule bindash_dist:
         "--mthres={params.d} "
         "--outfname={output} {input[0]} 2> {log}"
 
+rule tsv2parquet:
+    input:
+        "tables/{tool}_dists.tsv"
+    output:
+        "tables/{tool}_dists.parquet"
+    resources:
+        mem=config['mem']['large']
+    threads:
+        1
+    run:
+
+        if wildcards.tool == "mummer":
+            open_function= gd.load_mummer
+        elif wildcards.tool == "minimap":
+            open_function= gd.load_minimap
+        elif wildcards.tool == "bindash":
+            open_function= gd.load_bindash
+        elif wildcards.tool == "fastani":
+            open_function= gd.load_fastani
+        elif wildcards.tool == "mash":
+            open_function= gd.load_mash
+        else:
+            raise Exception(
+                f"Don't know how to load table from tool : {wildcards.tool}"
+            )
+
+
+        M= open_function(input[0]).drop(['Identity'],axis=1)
+        M.to_parquet(output[0],engine="pyarrow")
+
 
 
 checkpoint filter_sketch:

@@ -5,6 +5,7 @@ import scipy.cluster.hierarchy as hc
 from sklearn.metrics import silhouette_score
 import numpy as np
 from common import genome_pdist as gd
+import networkx as nx
 
 
 def automatic_cluster_species(
@@ -63,50 +64,66 @@ if __name__ == "__main__":
         not quality_score.isnull().any()
     ), "I have NA quality values for thq quality score, it seems not all of the values defined in the quality_score_formula are presentfor all entries in tables/Genome_quality.tsv "
 
-    if snakemake.config["species_based_on"] == "mummer":
-        M = gd.load_mummer(snakemake.input.dists)
-    elif snakemake.config["species_based_on"] == "minimap":
-        M = gd.load_minimap(snakemake.input.dists)
-    elif snakemake.config["species_based_on"] == "bindash":
-        M = gd.load_bindash(snakemake.input.dists)
-    else:
-        raise Exception(
-            "aligner defined in the config file "
-            "should be either 'mummer' or 'minimap' "
-        )
-    Dist = 1 - gd.pairewise2matrix(M, fillna=M.Identity.min())
 
-    if treshold == "auto":
-        Scores, labels = automatic_cluster_species(Dist, linkage_method=linkage_method)
-    else:
-        Scores, labels = treshold_based_clustering(
-            Dist, treshold, linkage_method=linkage_method
-        )
 
+    # load genome distances
+    M= gd.load_parquet(snakemake.input[0])
+
+    # genome distance to graph if ANI > 0.9
+    G= gd.to_graph(M.query(f"Identity>=0.9"))
+    if hasattr(G,'selfloop_edges'):
+        G.remove_edges_from(G.selfloop_edges())
+
+
+    # prepare table for species number
     mag2Species = pd.DataFrame(index=Q.index, columns=["SpeciesNr", "Species"])
     mag2Species.index.name = "genome"
-    mag2Species.loc[Dist.index, "SpeciesNr"] = labels
 
-    speciesNr = labels.max()
+    last_species_nr=0
+
+    for cc in nx.connected_components(G):
+
+
+        Mcc = M.loc[( M.index.levels[0].intersection(cc),
+                     M.index.levels[1].intersection(cc)
+                     ),
+                ]
+
+        Dist = 1 - gd.pairewise2matrix(Mcc, fillna=Mcc.Identity.min())
+
+        if treshold == "auto":
+            Scores, labels = automatic_cluster_species(Dist, linkage_method=linkage_method)
+        else:
+            Scores, labels = treshold_based_clustering(
+                Dist, treshold, linkage_method=linkage_method
+            )
+
+        # enter values of labels to species table
+        mag2Species.loc[Dist.index, "SpeciesNr"] = labels +last_species_nr
+        last_species_nr = mag2Species.SpeciesNr.max()
+
+
     missing_species = mag2Species.SpeciesNr.isnull()
     N_missing_species = sum(missing_species)
     mag2Species.loc[missing_species, "SpeciesNr"] = (
-        np.arange(speciesNr, speciesNr + N_missing_species) + 1
+        np.arange(last_species_nr, last_species_nr + N_missing_species) + 1
     )
 
     Scores["N_clusters"] += N_missing_species
     Scores.to_csv(snakemake.output.scores, sep="\t", index=False)
 
-    assert (
-        Scores.loc[Scores.Silhouette_score.idxmax(), "N_clusters"]
-        == mag2Species.SpeciesNr.max()
-    ), "error in calculation of N species"
+    # assert (
+    #     Scores.loc[Scores.Silhouette_score.idxmax(), "N_clusters"]
+    #     == mag2Species.SpeciesNr.max()
+    # ), "error in calculation of N species"
     print(f"Identified { mag2Species.SpeciesNr.max()} species")
 
+    # create propper species names
     n_leading_zeros = len(str(max(labels)))
     format_int = "sp{:0" + str(n_leading_zeros) + "d}"
     mag2Species["Species"] = mag2Species.SpeciesNr.apply(format_int.format)
 
+    # select representative
     mag2Species["Representative_Species"] = gd.best_genome_from_table(
         mag2Species.Species, quality_score
     )
