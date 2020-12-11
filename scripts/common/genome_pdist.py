@@ -202,8 +202,8 @@ def evaluate_clusters_range(
     return Scores
 
 
-def evaluate_clusters_tresholds(
-    tresholds, Dist, linkage_method="average", criterion="distance"
+def evaluate_clusters_thresholds(
+    thresholds, Dist, linkage_method="average", criterion="distance"
 ):
 
     linkage = hc.linkage(sp.distance.squareform(Dist), method=linkage_method)
@@ -213,8 +213,8 @@ def evaluate_clusters_tresholds(
         return evaluate_clusters(labels, Dist)
 
     Scores = pd.DataFrame(
-        [get_clusters(t) for t in tresholds],
-        index=tresholds,
+        [get_clusters(t) for t in thresholds],
+        index=thresholds,
         columns=["Silhouette_score", "N_clusters"],
     )
 

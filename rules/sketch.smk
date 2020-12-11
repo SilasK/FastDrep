@@ -138,7 +138,7 @@ checkpoint filter_sketch:
     output:
         temp(directory('{aligner}/subsets'))
     params:
-        treshold=config['pre_cluster_treshold'],
+        threshold=config['pre_cluster_threshold'],
         N=config['subset_size_alignments']
     benchmark:
         "logs/benchmark/filter_sketch_{aligner}.txt"
@@ -147,7 +147,7 @@ checkpoint filter_sketch:
     run:
 
         F= gd.load_mash(input[0])
-        G= gd.to_graph(F.query(f"Distance<={params.treshold}"))
+        G= gd.to_graph(F.query(f"Distance<={params.threshold}"))
         if hasattr(G,'selfloop_edges'):
             G.remove_edges_from(G.selfloop_edges())
 

@@ -4,14 +4,14 @@ localrules: get_representatives
 checkpoint cluster_species:
     input:
         dists=f"tables/{config['species_based_on']}_dists.parquet",
-        quality ="tables/Genome_quality.tsv",
+        genome_info ="tables/genome_info.tsv",
     output:
         cluster_file="tables/mag2species.tsv",
         scores="tables/evaluation_species_clustering.tsv"
     resources:
         mem=config['mem']['large']
     params:
-        treshold=config['species_treshold'],
+        threshold=config['species_threshold'],
         linkage_method=config.get('linkage_method','average'),
     script:
         "../scripts/group_species.py"
@@ -36,7 +36,7 @@ checkpoint cluster_strains:
     output:
         mag2strain="tables/mag2strains.tsv"
     params:
-        #treshold=config['species_treshold'],
+        #threshold=config['species_threshold'],
         linkage_method=config.get('linkage_method','average'),
     script:
         "../scripts/group_strains.py"

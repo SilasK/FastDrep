@@ -9,19 +9,19 @@ import networkx as nx
 
 
 def automatic_cluster_species(
-    Dist, seed_tresholds=[0.92, 0.97], linkage_method="average"
+    Dist, seed_thresholds=[0.92, 0.97], linkage_method="average"
 ):
 
     linkage = hc.linkage(sp.distance.squareform(Dist), method=linkage_method)
 
-    def get_Nclusters(treshold):
-        labels = hc.fcluster(linkage, (1 - treshold), criterion="distance")
+    def get_Nclusters(threshold):
+        labels = hc.fcluster(linkage, (1 - threshold), criterion="distance")
         return max(labels)
 
-    N_range = [get_Nclusters(t) for t in seed_tresholds]
+    N_range = [get_Nclusters(t) for t in seed_thresholds]
 
     if (N_range[1] - N_range[0]) > 100:
-        print(f"Need to evaluate more than {N_range[1]-N_range[0]} tresholds")
+        print(f"Need to evaluate more than {N_range[1]-N_range[0]} thresholds")
 
     assert ~np.isnan(N_range).any(), "N range is not defined"
 
@@ -30,7 +30,7 @@ def automatic_cluster_species(
     )
 
     if N_range[0] == N_range[1]:
-        labels = hc.fcluster(linkage, (1 - seed_tresholds[0]), criterion="distance")
+        labels = hc.fcluster(linkage, (1 - seed_thresholds[0]), criterion="distance")
     else:
 
         N_species = Scores.Silhouette_score.idxmax()
@@ -39,14 +39,14 @@ def automatic_cluster_species(
     return Scores, labels
 
 
-def treshold_based_clustering(Dist, treshold, linkage_method="average"):
-    assert (treshold > 0.9) & (
-        treshold < 1
-    ), "treshold should be between 0.9 and 1 or 'auto', treshold was {treshold}"
+def threshold_based_clustering(Dist, threshold, linkage_method="average"):
+    assert (threshold > 0.9) & (
+        threshold < 1
+    ), "threshold should be between 0.9 and 1 or 'auto', threshold was {threshold}"
     linkage = hc.linkage(sp.distance.squareform(Dist), method=linkage_method)
-    labels = hc.fcluster(linkage, (1 - treshold), criterion="distance")
-    Scores = gd.evaluate_clusters_tresholds(
-        [treshold], Dist, linkage_method=linkage_method
+    labels = hc.fcluster(linkage, (1 - threshold), criterion="distance")
+    Scores = gd.evaluate_clusters_thresholds(
+        [threshold], Dist, linkage_method=linkage_method
     )
     return Scores, labels
 
@@ -54,10 +54,10 @@ def treshold_based_clustering(Dist, treshold, linkage_method="average"):
 if __name__ == "__main__":
 
     linkage_method = snakemake.params.linkage_method
-    treshold = snakemake.params.treshold
+    threshold = snakemake.params.threshold
     quality_score_formula = snakemake.config["quality_score"]
 
-    Q = gd.load_quality(snakemake.input.quality)
+    Q = pd.read_csv(snakemake.input.genome_info,sep='\t',index_col=0)
     quality_score = Q.eval(quality_score_formula)
 
     assert (
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     M= gd.load_parquet(snakemake.input[0])
 
     # genome distance to graph if ANI > 0.9
-    G= gd.to_graph(M.query(f"Identity>=0.9"))
+    G= gd.to_graph(M.query(f"Identity>=@threshold"))
     if hasattr(G,'selfloop_edges'):
         G.remove_edges_from(G.selfloop_edges())
 
@@ -91,11 +91,11 @@ if __name__ == "__main__":
 
         Dist = 1 - gd.pairewise2matrix(Mcc, fillna=Mcc.Identity.min())
 
-        if treshold == "auto":
+        if threshold == "auto":
             Scores, labels = automatic_cluster_species(Dist, linkage_method=linkage_method)
         else:
-            Scores, labels = treshold_based_clustering(
-                Dist, treshold, linkage_method=linkage_method
+            Scores, labels = threshold_based_clustering(
+                Dist, threshold, linkage_method=linkage_method
             )
 
         # enter values of labels to species table
@@ -129,3 +129,6 @@ if __name__ == "__main__":
     )
 
     mag2Species.to_csv(snakemake.output.cluster_file, sep="\t")
+
+    Q= Q.join(mag2Species)
+    Q.to_csv(snakemake.input.genome_info,sep='\t')
