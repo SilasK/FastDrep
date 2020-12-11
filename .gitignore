@@ -3,6 +3,7 @@
 !scripts/*
 !scripts/common
 !scripts/common/*
+!scripts/genomdb/*
 scripts/.snakemake*
 !Snakefile
 !config.yaml
