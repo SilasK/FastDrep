@@ -6,16 +6,21 @@ runtime:
   default: 5
   minimap: 12
   checkm: 12
+  precluster: 12
+
+tmpfolder: "/tmp"
 
 fasta_extension: ".fasta" # ['.fasta' '.fasta.gz' is sometimes suported]
 
 sketcher: "bindash" # use bindash or mash for sketching
 sketch_k: 21
 sketch_size: 10000
-sketch_max_dist: 0.2
 
 
-pre_cluster_treshold: 0.08
+
+pre_cluster_min_identity: 0.85
+pre_cluster_treshold: 0.99
+
 subset_size_alignments: 5000
 minimap_extra: "-c --secondary=no -x asm20"
 
@@ -36,7 +41,7 @@ strains_based_on: 'minimap'
 species_treshold: 0.95 # ]0.9-1[ or 'auto' / auto detects best treshold in range [0.92,0.97]
 genome_folder: 'all_bins'
 genome_qualities: 'Checkm_quality_allbins.tsv'
-quality_score: 'completeness - 5*contamination + 0.5*logN50 + Isolate*100'
+quality_score: 'completeness - 5*contamination + 0.5*logN50'
 qualityfilter_criteria: 'completeness-5*contamination>=50' # use "quality_score" for the above definition
 filter_criteria: "N50>5000"
 rename_method: "prefix"

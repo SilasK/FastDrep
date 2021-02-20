@@ -25,9 +25,7 @@ def run_minimap(
     )
 
 
-def many_minimap(
-    alignment_list, genome_folder, paf_folder, genome_stats_file, extension=".fasta"
-):
+def many_minimap( alignment_list, genome_folder, paf_folder, genome_stats_file, extension ):
 
     stats = pd.read_csv(genome_stats_file, index_col=0, sep="\t")
 

@@ -1,3 +1,4 @@
+#TODO: expand precluster for species cluaterin
 
 # duplicated rule in case not imported
 rule calculate_stats:
@@ -19,15 +20,16 @@ rule calculate_stats:
 
 
 
+
 rule many_minimap:
     input:
         genome_folder=genome_folder,
-        alignment_list="minimap/subsets/{subset}.txt",
+        alignment_list="alignment/subsets/{subset}.txt",
         genome_stats= "tables/genome_stats.tsv"
     output:
-        alignments_stats="minimap/alignments_stats/{subset}.tsv",
+        alignments_stats="alignment/alignments_stats/{subset}.tsv",
     log:
-        "logs/minimap2/{subset}.txt"
+        "logs/minimap/{subset}.txt"
     benchmark:
         "logs/benchmarks/minimap/{subset}.txt"
     threads:
@@ -38,7 +40,7 @@ rule many_minimap:
         "../envs/minimap2.yaml"
     params:
         minimap_extra= config['minimap_extra'], #asm5/asm10/asm20: asm-to-ref mapping, for ~0.1/1/5% sequence divergence
-        paf_folder="minimap/paf",
+        paf_folder="alignment/paf",
         extension=config['fasta_extension']
     script:
         "../scripts/many_minimap.py"
@@ -46,9 +48,13 @@ rule many_minimap:
 
 def get_combine_paf_input(wildcards):
 
-    subsets=get_alignment_subsets(aligner='minimap',**wildcards)
 
-    return expand("minimap/alignments_stats/{subset}.tsv",subset=subsets)
+    subset_dir= checkpoints.get_alignment_subsets.get().output[0]
+    logger.info(f"subset dir : {subset_dir}")
+
+    subsets= glob_wildcards(os.path.join(subset_dir,'{subset}.txt')).subset
+
+    return expand("alignment/alignments_stats/{subset}.tsv",subset=subsets)
 
 
 localrules: combine_paf
@@ -56,14 +62,12 @@ rule combine_paf:
     input:
         get_combine_paf_input
     output:
-        "tables/minimap_dists.tsv"
+        "precluster/minimap_dists.tsv"
     run:
 
         import pandas as pd
 
         sep='\t'
-
-        print(input)
 
         D = pd.read_csv(input[0],sep=sep)
         n_cols= D.shape[1]
@@ -93,6 +97,34 @@ def estimate_time_mummer(N,threads):
 
 
 
+rule many_mummer:
+    input:
+        genome_folder=genome_folder,
+        alignment_list="alignment/subsets/{subset}.txt",
+        genome_stats= "tables/genome_stats.tsv"
+    output:
+        output_table="alignment/mummer/ani_table_{subset}.tsv",
+    log:
+        "logs/mummer/{subset}.txt"
+    benchmark:
+        "logs/benchmarks/mummer/{subset}.txt"
+    threads:
+        1 #config['threads']
+    resources:
+        time= lambda wc, input, threads: estimate_time_mummer(config['subset_size_alignments'],threads),
+        mem=config['mem'].get('mummer',20)
+    conda:
+        "../envs/mummer.yaml"
+    params:
+        out_folder="alignment/delta",
+        mummer_options= "--mincluster 65 --maxgap 90 ",
+        tmpfolder= config['tmpfolder'],
+    script:
+        "../scripts/many_mummer.py"
+
+
+
+
 rule run_mummer:
     input:
         comparison_list="mummer/subsets/{subset}.txt",
@@ -107,22 +139,21 @@ rule run_mummer:
     resources:
         time= lambda wc, input, threads: estimate_time_mummer(config['subset_size_alignments'],threads),
         mem=config['mem'].get('mummer',20)
+    params:
+        snakefile= os.path.join(snakemake_folder,"rules","mummer.smk")
     log:
         "logs/mummer/workflows/{subset}.txt"
     benchmark:
         "logs/benchmarks/mummer/{subset}.txt"
     benchmark:
         "logs/benchmarks/mummer/{subset}.txt"
-    params:
-        path= os.path.dirname(workflow.snakefile)
-    shell:
-        "snakemake -s {params.path}/rules/mummer.smk "
-        "--config comparison_list='{input.comparison_list}' "
-        " genome_folder='{input.genome_folder}' "
-        " subset={wildcards.subset} "
-        " genome_stats={input.genome_stats} "
-        " --rerun-incomplete "
-        "-j {threads} --nolock 2> {log}"
+    script:
+        "../scripts/mummer_snakemake.py"
+
+
+
+
+
 
 
 
@@ -132,17 +163,18 @@ def get_merge_mummer_ani_input(wildcards):
         raise Exception("Mummer doesn't handle gziped files, "
                         "Select in the config file minimap instead"
                         )
+    subset_dir= checkpoints.get_alignment_subsets.get().output[0]
+    subsets= glob_wildcards(os.path.join(subset_dir,'{subset}.txt')).subset
 
-    subsets=get_alignment_subsets(aligner="mummer")
 
-    return expand("mummer/ANI/{subset}.tsv",subset=subsets)
+    return expand(rules.many_mummer.output,subset=subsets)
 
 localrules: merge_mummer_ani
 rule merge_mummer_ani:
     input:
         get_merge_mummer_ani_input
     output:
-        "tables/mummer_dists.tsv"
+        "precluster/mummer_dists.tsv"
     run:
         import pandas as pd
         import shutil

@@ -11,7 +11,7 @@ checkpoint gen_genome_lists:
         cluster_size=config['fastani']['subset_size']
     run:
         from glob import glob
-        genomes= glob(os.path.join(input[0],"*.fasta"))
+        genomes= glob(os.path.join(input[0],"*"+config['fasta_extension']))
 
         os.makedirs(output[0])
 

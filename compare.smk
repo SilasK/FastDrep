@@ -1,6 +1,10 @@
 #this snakefile is for comparison of a given genome set
 
 
+snakemake_folder= os.path.dirname(workflow.snakefile)
+# use default config
+configfile: os.path.join(snakemake_folder,'default_config.yaml')
+
 import os,sys
 from glob import glob
 
@@ -8,9 +12,9 @@ genome_folder='genomes'
 
 input_genome_folder=config['genome_folder']
 
-#genomes= glob(os.path.join(genome_folder,"*"))
 
-sys.path.append(os.path.join(os.path.dirname(workflow.snakefile),'scripts'))
+
+sys.path.append(os.path.join(snakemake_folder,'scripts'))
 from common import genome_pdist as gd
 from common import io
 
@@ -20,7 +24,7 @@ include: "rules/fastani.smk"
 include: "rules/pyani.smk"
 include: "rules/bbsketch.smk"
 
-include: "rules/sketch.smk"
+include: "rules/precluster.smk"
 include: "rules/alignments.smk"
 include: "rules/cluster.smk"
 
@@ -28,7 +32,7 @@ rule all:
     input:
         #"tables/fastANI_dists.tsv",
         #expand("pyani/{method}",method=['ANIm','ANIb']),
-        f"tables/{config['strains_based_on']}_dists.tsv",
+        #f"tables/{config['strains_based_on']}_dists.tsv",
         "representatives/strains",
         "representatives/species"
 

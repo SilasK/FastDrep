@@ -8,6 +8,9 @@ with open(config['comparison_list']) as f:
 genome_folder= config['genome_folder']
 subset= config['subset']
 genome_stats= config['genome_stats']
+tmpfolder= config['tmpdir']
+
+ os.makedirs(tmpfolder,ok_exists=True)
 
 assert (path.isdir(genome_folder) & path.exists(genome_folder))
 
@@ -17,32 +20,53 @@ rule all:
         f"mummer/ANI/{subset}.tsv"
 
 
+
+rule unzip:
+    input:
+        path.join(genome_folder,"{genome}.fasta.gz")
+    output:
+        path.join(tmpfolder,"{genome}.fasta")
+    shell:
+        "gunzip -c {input} > output"
+
+
+
+
+def mummer_input(wildcards):
+
+    if config['fasta_extension']='.fasta.gz':
+        fasta_folder= path.join(config['tmpfolder'],'genomes')
+    else:
+        fasta_folder= genome_folder
+
+    return dict(
+                ref= f"{fasta_folder}/{wildcards.ref}.fasta"
+                query=f"{fasta_folder}//{wildcards.query}.fasta"
+                )
+
+
 rule run_mummer:
     input:
-        ref=path.join(genome_folder,"{ref}.fasta"),
-        query=path.join(genome_folder,"{query}.fasta")
+        unpack(mummer_input)
     output:
-        temp("mummer/delta/{ref}/{query}.delta")
+        "mummer/delta/{ref}/{query}.delta"
     params:
-        out_prefix= "mummer/delta/{ref}/{query}",
+        out_prefix= "{config[tmpdir]}/{ref}_{query}",
         options= "--mincluster 65 --maxgap 90 ",
-        method= "mum"
+        method= "mum",
+        filter_options= "-r -q"
     log:
         "logs/mummer/mummer/{ref}/{query}.txt"
     threads:
         1
     shell:
-        "nucmer --{params.method} --prefix {params.out_prefix} {params.options} {input.ref} {input.query} 2> {log}"
+        "nucmer --{params.method} "
+        "--prefix {params.out_prefix} "
+        "{params.options} "
+        "{input.ref} {input.query} 2> {log} ;
+        "delta-filter {params.options} {params.out_prefix}.delta > {output} 2> {log}"
 
-rule delta_filter:
-    input:
-        rules.run_mummer.output[0]
-    output:
-        "mummer/delta/{ref}/{query}.delta.filtered"
-    params:
-        options="-r -q"
-    shell:
-        "delta-filter {params.options} {input} > {output}"
+
 
 
 def parse_delta(filename):
