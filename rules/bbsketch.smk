@@ -17,7 +17,7 @@ rule bbsketch_mags:
         overwrite=True,
         command=f"bbsketch.sh perfile {genome_folder}/*.fasta",
     resources:
-        time= 10
+        time_min= 600
     log:
         "logs/bbsketch/sketch_mags_{NTorAA}.log"
     benchmark:

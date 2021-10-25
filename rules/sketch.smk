@@ -106,7 +106,7 @@ rule tsv2parquet:
     output:
         "tables/{tool}_dists.parquet"
     resources:
-        mem=config['mem']['large']
+        mem_mb=config['mem']['large'] *1000
     threads:
         1
     run:
@@ -143,7 +143,7 @@ checkpoint filter_sketch:
     benchmark:
         "logs/benchmark/filter_sketch_{aligner}.txt"
     resources:
-        mem=config['mem']['large']
+        mem_mb=config['mem']['large']*1000
     run:
 
         F= gd.load_mash(input[0])

@@ -95,8 +95,8 @@ rule run_checkm:
     benchmark:
         "log/benchmarks/checkm_{subset}.txt"
     resources:
-        mem=config['mem']['large'],
-        time=config['runtime']['checkm']
+        mem_mb=config['mem']['large']*1000,
+        time_min=config['runtime']['checkm']*60
     shell:
         """
         checkm lineage_wf \
@@ -132,8 +132,8 @@ rule merge_checkm:
         checkm="filter/Genome_quality.tsv",
         markers= "filter/checkm_markers.fasta"
     resources:
-        mem=config['mem']['default'],
-        time=config['runtime']['default']
+        mem_bm=config['mem']['default']*1000,
+        time_min=config['runtime']['default'] *60
     run:
 
         import pandas as pd

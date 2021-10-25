@@ -37,7 +37,7 @@ rule fastANI:
     output:
         "clusters/fastani/ANIcluster{i}-{j}.txt",
     resources:
-        mem=30
+        mem_mb=30*1000
     threads:
         config['threads']
     conda:

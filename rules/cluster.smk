@@ -9,7 +9,7 @@ checkpoint cluster_species:
         cluster_file="tables/mag2species.tsv",
         scores="tables/evaluation_species_clustering.tsv"
     resources:
-        mem=config['mem']['large']
+        mem_mb=config['mem']['large']*1000
     params:
         threshold=config['species_threshold'],
         linkage_method=config.get('linkage_method','average'),
