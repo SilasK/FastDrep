@@ -34,8 +34,8 @@ rule all:
 
 for r in workflow.rules:
     if not "mem" in r.resources:
-        r.resources["mem"]=config["mem"]['default']
+        r.resources["mem_mb"]=config["mem"]['default'] *1000
     if not "time" in r.resources:
-        r.resources["time"]=config["runtime"]["default"]
+        r.resources["time_min"]=config["runtime"]["default"] *60
 
 #

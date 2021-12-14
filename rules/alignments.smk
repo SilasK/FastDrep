@@ -33,7 +33,7 @@ rule many_minimap:
     threads:
         config['threads']
     resources:
-        time=config['runtime']['minimap']
+        time_min=config['runtime']['minimap'] *60
     conda:
         "../envs/minimap2.yaml"
     params:
@@ -87,7 +87,7 @@ rule combine_paf:
 def estimate_time_mummer(N,threads):
     "retur time in minutes"
 
-    time_per_mummer_call = 1/60 # 1min in h
+    time_per_mummer_call = 1 # 1min
 
     return int(N*time_per_mummer_call)//threads + 5
 
@@ -105,8 +105,8 @@ rule run_mummer:
     conda:
         "../envs/mummer.yaml"
     resources:
-        time= lambda wc, input, threads: estimate_time_mummer(config['subset_size_alignments'],threads),
-        mem=config['mem'].get('mummer',20)
+        time_min= lambda wc, input, threads: estimate_time_mummer(config['subset_size_alignments'],threads),
+        mem_mb=config['mem'].get('mummer',20) *1000
     log:
         "logs/mummer/workflows/{subset}.txt"
     benchmark:

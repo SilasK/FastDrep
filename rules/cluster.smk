@@ -4,12 +4,12 @@ localrules: get_representatives
 checkpoint cluster_species:
     input:
         dists=f"tables/{config['species_based_on']}_dists.parquet",
-        genome_info ="tables/genome_info.tsv",
+        genome_info = ancient("tables/genome_info.tsv"),
     output:
         cluster_file="tables/mag2species.tsv",
         scores="tables/evaluation_species_clustering.tsv"
     resources:
-        mem=config['mem']['large']
+        mem_mb=config['mem']['large']*1000
     params:
         threshold=config['species_threshold'],
         linkage_method=config.get('linkage_method','average'),
@@ -30,11 +30,13 @@ def get_species(wildcards):
 
 checkpoint cluster_strains:
     input:
-        dists=f"tables/{config['strains_based_on']}_dists.tsv",
-        quality ="tables/Genome_quality.tsv",
+        dists=f"tables/{config['strains_based_on']}_dists.parquet",
+        genome_info = ancient("tables/genome_info.tsv"),
         mag2species= "tables/mag2species.tsv"
     output:
         mag2strain="tables/mag2strains.tsv"
+    resources:
+        mem_mb=config['mem']['large']*1000
     params:
         #threshold=config['species_threshold'],
         linkage_method=config.get('linkage_method','average'),
